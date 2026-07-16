@@ -1,0 +1,3115 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warming Stripes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0b0b0c; --panel-bg:rgba(14,14,15,.9); --surface:#161617;
+  --ink:#ece6d8; --text:#ece6d8; --text-dim:rgba(236,230,216,.6);
+  --text-faint:rgba(236,230,216,.36); --rule:rgba(236,230,216,.16);
+  --rule-soft:rgba(236,230,216,.08); --hover:rgba(236,230,216,.08);
+  --accent:#c0473c; --radius:3px;
+  --font-serif:"Playfair Display",Georgia,serif;
+  --font-sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+  --spectrum:linear-gradient(90deg,#053061,#2166ac,#4393c3,#92c5de,#d1e5f0,#f7f7f7,#fddbc7,#f4a582,#d6604d,#b2182b,#67001f);
+  --spectrum-warm:linear-gradient(90deg,#f7f7f7,#fddbc7,#f4a582,#d6604d,#b2182b,#67001f);
+  --spectrum-cool:linear-gradient(90deg,#053061,#2166ac,#4393c3,#92c5de,#d1e5f0,#f7f7f7);
+  --frame-shadow:0 30px 70px rgba(0,0,0,.55);
+  --frame-shadow-md:0 14px 34px rgba(0,0,0,.55);
+  --frame-shadow-sm:0 22px 50px rgba(0,0,0,.4);
+  --barchart-label:rgba(255,255,255,.88);
+  --barchart-label-zero:rgba(255,255,255,.94);
+}
+html[data-theme=paper] {
+  --bg:#f6f3ec; --panel-bg:rgba(249,246,240,.92); --surface:#f9f6f0;
+  --ink:#1c1a17; --text:#1c1a17; --text-dim:rgba(28,26,23,.62);
+  --text-faint:rgba(28,26,23,.42); --rule:rgba(28,26,23,.2);
+  --rule-soft:rgba(28,26,23,.1); --hover:rgba(28,26,23,.07);
+  --accent:#b0392e;
+  /* Inset only — no drop shadow outside frames; ~15% opacity, barely visible */
+  --frame-shadow:inset 0 1px 3px rgba(28,26,23,.15);
+  --frame-shadow-md:inset 0 1px 2px rgba(28,26,23,.12);
+  --frame-shadow-sm:inset 0 1px 2px rgba(28,26,23,.12);
+  --barchart-label:rgba(28,26,23,.78);
+  --barchart-label-zero:rgba(28,26,23,.88);
+}
+html[data-theme=paper] .overlay--welcome { background:radial-gradient(ellipse at center,#f6f3ec59,#f6f3eceb) }
+* { box-sizing:border-box }
+html,body,#root { margin:0; height:100%; width:100% }
+body { background:var(--bg); color:var(--text); font-family:var(--font-sans);
+       overflow:hidden; -webkit-font-smoothing:antialiased }
+.app { position:fixed; top:0; right:0; bottom:0; left:0 }
+.stripes-canvas { position:fixed; top:0; right:0; bottom:0; left:0;
+                  display:block; width:100vw; height:100vh }
+/* Panel */
+.panel { position:fixed; top:18px; left:18px; bottom:18px; width:316px;
+         display:flex; flex-direction:column; padding:22px 22px 12px;
+         background:var(--panel-bg); border:1px solid var(--rule);
+         border-radius:var(--radius); backdrop-filter:blur(16px) saturate(1.05);
+         box-shadow:var(--frame-shadow); overflow-y:auto; z-index:10;
+         counter-reset:sec; animation:panel-in .45s cubic-bezier(.16,1,.3,1);
+         transition:opacity .2s, transform .2s }
+.panel.hidden { opacity:0; pointer-events:none; transform:translateX(-8px) }
+@keyframes panel-in { 0%{opacity:0;transform:translate(-14px)} }
+.panel::-webkit-scrollbar { width:6px }
+.panel::-webkit-scrollbar-thumb { background:var(--rule); border-radius:6px }
+/* Masthead */
+.masthead { padding-bottom:16px }
+.masthead__kicker { margin:0 0 8px; font-size:9px; font-weight:600;
+                    letter-spacing:.22em; text-transform:uppercase; color:var(--text-faint) }
+.masthead__title { margin:0; font-family:var(--font-serif); font-size:27px;
+                   font-weight:800; line-height:.98; letter-spacing:-.015em; color:var(--ink) }
+.masthead__spectrum { margin-top:14px; height:3px; width:100%; background:var(--spectrum) }
+/* Sections */
+.section { display:flex; flex-direction:column; gap:8px; padding:5px 0 20px;
+           border-top:1px solid var(--rule-soft) }
+.section__label { display:flex; align-items:baseline; gap:9px; margin:0;
+                  font-size:10px; font-weight:600; letter-spacing:.16em;
+                  text-transform:uppercase; color:var(--text-dim) }
+.section__label::before { counter-increment:sec; content:counter(sec,decimal-leading-zero);
+                           font-family:var(--font-serif); font-size:13px; font-weight:700;
+                           letter-spacing:0; color:var(--accent) }
+.hint { margin:0; font-size:11px; line-height:1.5; color:var(--text-dim) }
+/* City search */
+.city-search { position:relative }
+.city-search__input-wrap { display:flex; align-items:center; gap:9px; padding:0 2px 9px;
+                            border-bottom:1px solid var(--rule); color:var(--text-dim);
+                            transition:border-color .16s }
+.city-search__input-wrap:focus-within { border-color:var(--ink) }
+.city-search__input { flex:1; min-width:0; border:none; background:none; color:var(--text);
+                      font-size:14px; font-family:inherit; outline:none }
+.city-search__input::placeholder { color:var(--text-faint) }
+.city-search__dropdown { position:absolute; z-index:20; top:calc(100% + 8px); left:0; right:0;
+                          margin:0; padding:5px; list-style:none; max-height:260px;
+                          overflow-y:auto; background:var(--surface); border:1px solid var(--rule);
+                          border-radius:var(--radius); box-shadow:var(--frame-shadow-sm) }
+.city-search__item { display:flex; flex-direction:column; gap:1px; padding:9px 11px;
+                     border-radius:2px; cursor:pointer }
+.city-search__item:hover,.city-search__item.is-active { background:rgba(236,230,216,.08) }
+.city-search__name { font-size:13px; font-weight:600 }
+.city-search__meta { font-size:11px; color:var(--text-faint) }
+.city-search__empty { padding:11px; font-size:12px; color:var(--text-dim) }
+/* City list */
+.city-list { list-style:none; margin:2px 0 0; padding:0; display:flex; flex-direction:column }
+.city-list__item { display:flex; align-items:center; gap:10px; padding:8px 2px;
+                   border-top:1px solid var(--rule-soft); cursor:grab; user-select:none }
+.city-list__item:first-child { border-top:none }
+.city-list__item:active { cursor:grabbing }
+.city-list__item.is-dragging { opacity:.35 }
+.city-list__item.drag-over { background:var(--hover); border-radius:2px }
+.city-list__grip { color:var(--text-faint); font-size:13px; flex:none; line-height:1 }
+.src-tag { font-size:8.5px; font-weight:700; letter-spacing:.1em; padding:1px 4px;
+           border-radius:2px; background:rgba(111,158,106,.22); color:#6f9e6a;
+           border:1px solid rgba(111,158,106,.3); flex:none; white-space:nowrap }
+.city-list__name { flex:1; min-width:0; font-size:11.5px; font-weight:600;
+                   letter-spacing:.04em; text-transform:uppercase;
+                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.status-dot { width:7px; height:7px; border-radius:50%; flex:none }
+.status-dot--ready { background:#6f9e6a }
+.status-dot--error { background:var(--accent) }
+.status-dot--loading { background:#b9933f; animation:pulse 1s ease-in-out infinite }
+@keyframes pulse { 50%{opacity:.3} }
+/* Segmented controls */
+.seg { display:flex; border:1px solid var(--rule); border-radius:var(--radius); overflow:hidden }
+.seg--grid { display:grid; gap:5px; border:none }
+.seg__btn { flex:1; padding:8px 4px; border:none; border-left:1px solid var(--rule);
+            background:none; color:var(--text-dim); font-family:inherit; font-size:10px;
+            font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+            cursor:pointer; transition:background .14s,color .14s }
+.seg__btn:first-child { border-left:none }
+.seg--grid .seg__btn { border:1px solid var(--rule); border-radius:2px }
+.seg__btn:hover { color:var(--text); background:var(--hover) }
+.seg__btn.is-on { background:var(--ink); color:var(--bg) }
+/* Field rows */
+.field-row { display:flex; align-items:center; justify-content:space-between; gap:12px }
+.field-row__label { font-size:10.5px; font-weight:600; letter-spacing:.08em;
+                    text-transform:uppercase; color:var(--text-dim) }
+.year-range { display:flex; align-items:center; gap:7px }
+.year-range__dash { color:var(--text-faint) }
+.year-stepper { display:inline-flex; align-items:stretch; border:1px solid var(--rule); border-radius:2px;
+                background:rgba(236,230,216,.04); overflow:hidden }
+.year-stepper:focus-within { border-color:var(--ink) }
+.year-stepper .year-input { border:none; border-radius:0; background:transparent; width:52px; padding-right:4px }
+.year-stepper__btns { display:flex; flex-direction:column; border-left:1px solid var(--rule) }
+.year-stepper__btn { flex:1; width:18px; padding:0; border:none; background:none; color:var(--text-dim);
+                     font-size:7px; line-height:1; cursor:pointer; transition:background .12s,color .12s,opacity .12s }
+.year-stepper__btn:hover:not(:disabled) { background:var(--hover); color:var(--ink) }
+.year-stepper__btn:disabled { opacity:.28; cursor:default }
+.year-input, .select { padding:6px 8px; border:1px solid var(--rule); border-radius:2px;
+                        background:rgba(236,230,216,.04); color:var(--text);
+                        font-family:inherit; font-size:12px }
+/* Hide browser spinners so the full 68px is available for the year number */
+.year-input::-webkit-outer-spin-button,
+.year-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0 }
+.year-input { width:68px; text-align:center; -moz-appearance:textfield }
+.select { cursor:pointer }
+.year-input:focus, .select:focus { outline:none; border-color:var(--ink) }
+/* Toggle */
+.toggle { display:inline-flex; align-items:center; gap:9px; border:none; background:none;
+          color:var(--text-dim); font-family:inherit; font-size:11px; font-weight:600;
+          letter-spacing:.06em; text-transform:uppercase; cursor:pointer }
+.toggle__track { width:30px; height:17px; border-radius:17px;
+                 background:rgba(236,230,216,.16); position:relative; transition:background .16s }
+.toggle.is-on .toggle__track { background:var(--accent) }
+.toggle__thumb { position:absolute; top:2px; left:2px; width:13px; height:13px;
+                 border-radius:50%; background:var(--ink); transition:transform .16s }
+.toggle.is-on .toggle__thumb { transform:translate(13px) }
+/* Buttons */
+.btn { padding:8px 14px; border:1px solid var(--rule); border-radius:2px; background:none;
+       color:var(--text); font-family:inherit; font-size:10.5px; font-weight:600;
+       letter-spacing:.1em; text-transform:uppercase; cursor:pointer;
+       transition:background .14s,color .14s }
+.btn:hover { background:var(--hover) }
+.btn--primary { background:var(--ink); border-color:var(--ink); color:var(--bg) }
+.btn--primary:hover { filter:brightness(1.08) }
+.btn--block { width:100%; margin-top:10px }
+.icon-btn { flex:none; width:22px; height:22px; border-radius:2px; border:1px solid var(--rule);
+            background:none; color:var(--text-dim); font-size:13px; line-height:22px;
+            text-align:center; cursor:pointer; transition:all .12s }
+.icon-btn:hover { border-color:var(--accent); color:var(--ink) }
+/* Footer */
+.panel__footer { margin-top:auto; padding-top:16px; border-top:1px solid var(--rule);
+                 display:flex; flex-direction:column; gap:8px; counter-reset:sec 9 }
+.footer-row { display:flex; align-items:center; gap:8px }
+.footer-row--controls { align-items:flex-start }
+.footer-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:8px }
+.footer-row .seg { flex:1 }
+.footer-row .btn { flex:1 }
+.panel__shortcuts { margin:0; font-size:9.5px; line-height:1.8; color:var(--text-faint) }
+kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radius:2px;
+      background:rgba(236,230,216,.1); border:1px solid var(--rule) }
+/* Legend */
+.legend { position:fixed; bottom:20px; left:50%; transform:translate(-50%); z-index:9;
+          display:flex; flex-direction:column; gap:6px; padding:10px 15px;
+          background:var(--panel-bg); border:1px solid var(--rule);
+          border-radius:var(--radius); backdrop-filter:blur(14px); pointer-events:none }
+.legend__unit { font-size:9px; font-weight:600; letter-spacing:.18em;
+                text-transform:uppercase; color:var(--text-dim); text-align:center }
+.legend__bar { width:280px; height:10px; border:1px solid var(--rule) }
+.legend__ticks { display:flex; justify-content:space-between; font-size:10.5px;
+                 color:var(--text-dim); font-variant-numeric:tabular-nums }
+/* Bar chart view — Ed Hawkins-style anomaly bar charts, one panel per city */
+.barchart-overlay { position:fixed; top:0; right:0; bottom:0; left:354px; z-index:6;
+                     display:none; align-items:center; justify-content:center;
+                     transition:left .2s; pointer-events:none; overflow:auto;
+                     padding:8px 10px; box-sizing:border-box }
+.barchart-overlay.visible { display:flex; pointer-events:auto }
+.barchart-shell { display:flex; flex-direction:column; align-items:center; gap:14px;
+                  width:min(98%, calc(100vw - var(--barchart-left, 354px) - 20px));
+                  max-height:88vh }
+.barchart-nav { display:flex; align-items:center; justify-content:center; gap:18px;
+                flex:none; user-select:none }
+.barchart-nav[hidden] { display:none !important }
+.barchart-nav__btn { width:36px; height:36px; border-radius:var(--radius);
+                     border:1px solid var(--rule); background:var(--surface);
+                     color:var(--ink); font-size:22px; line-height:1; cursor:pointer;
+                     font-family:var(--font-serif); transition:border-color .14s,color .14s,opacity .14s }
+.barchart-nav__btn:hover:not(:disabled) { border-color:var(--ink) }
+.barchart-nav__btn:disabled { opacity:.28; cursor:default }
+.barchart-nav__label { min-width:220px; text-align:center; font-size:11.5px; font-weight:600;
+                       letter-spacing:.06em; text-transform:uppercase; color:var(--text-dim) }
+.barchart-grid { display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+                   align-items:stretch; width:100%; height:auto }
+.barchart-grid--1 { max-width:890px }
+.barchart-grid--2 { max-width:1690px }
+.barchart-grid--3 { max-width:2260px }
+.barchart-grid--4 { max-width:2720px }
+.barchart-grid--single { max-width:890px; flex-wrap:nowrap; justify-content:center }
+.barchart-panel { flex:1 1 401px; max-width:660px; min-width:372px; display:flex; flex-direction:column;
+                   background:var(--panel-bg); border:1px solid var(--rule);
+                   border-radius:var(--radius); padding:10px 12px 6px;
+                   box-shadow:var(--frame-shadow);
+                   backdrop-filter:blur(16px) saturate(1.05) }
+.barchart-panel__title { margin:0 0 1px; font-family:var(--font-serif);
+                          font-size:19px; font-weight:800; color:var(--ink) }
+.barchart-panel__subtitle { margin:0 0 6px; font-size:10.5px; color:var(--text-dim);
+                             letter-spacing:.02em }
+.barchart-svg { display:block; width:100%; max-width:100%; height:auto; margin:0 auto;
+                aspect-ratio:780 / 580; max-height:82vh }
+.barchart-bar { cursor:crosshair; }
+.barchart-bar-hit { cursor:crosshair; fill:transparent; stroke:none; }
+.barchart-bar-vis { pointer-events:none; }
+/* Hover guide line — tracks the pointer across the full stripe height */
+.hover-line { position:fixed; top:0; height:100vh; width:1px;
+              background:rgba(255,255,255,.7); pointer-events:none;
+              z-index:8; display:none }
+/* Tooltip */
+.tooltip { position:fixed; z-index:30; pointer-events:none; min-width:155px;
+           padding:10px 12px; background:var(--surface); border:1px solid var(--rule);
+           border-radius:var(--radius); box-shadow:var(--frame-shadow-md) }
+.tooltip__title { font-size:9.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase }
+.tooltip__date { font-family:var(--font-serif); font-style:italic; font-size:13px;
+                 color:var(--text-dim); margin-bottom:7px }
+.tooltip__rows { display:flex; flex-direction:column; gap:4px }
+.tooltip__row { display:flex; justify-content:space-between; gap:16px; font-size:10.5px;
+                letter-spacing:.04em; text-transform:uppercase; color:var(--text-dim) }
+.tooltip__row.is-strong .tooltip__value { color:var(--ink); font-weight:700 }
+.tooltip__value { font-variant-numeric:tabular-nums; color:var(--text); text-transform:none }
+/* Cover/Welcome */
+.overlay { position:fixed; top:0; right:0; bottom:0; left:0; z-index:5;
+           display:flex; flex-direction:column; align-items:center; justify-content:center;
+           text-align:center; padding:24px }
+.overlay--welcome { background:radial-gradient(ellipse at center,#0b0b0c66,#0b0b0ce6);
+                    pointer-events:auto; transition:opacity .4s }
+.overlay--welcome.hidden { opacity:0; pointer-events:none }
+.cover { max-width:700px }
+.cover__kicker { margin:0 0 20px; font-size:10px; font-weight:600; letter-spacing:.3em;
+                 text-transform:uppercase; color:var(--text-dim) }
+.cover__title { margin:0; font-family:var(--font-serif); font-size:clamp(38px,7vw,82px);
+                font-weight:800; line-height:.98; letter-spacing:-.02em; color:var(--ink) }
+.cover__spectrum { height:4px; width:min(420px,70%); margin:24px auto; background:var(--spectrum) }
+.cover__dek { margin:0 auto; max-width:500px; font-family:var(--font-serif);
+              font-size:clamp(14px,1.5vw,18px); line-height:1.6; color:var(--text-dim) }
+.cover__cities { margin-top:28px; display:flex; flex-wrap:wrap; align-items:baseline;
+                 justify-content:center; gap:4px }
+.cover__begin { margin-right:6px; font-size:10px; font-weight:600; letter-spacing:.2em;
+                text-transform:uppercase; color:var(--text-faint) }
+.cover__dot { color:var(--text-faint); margin:0 3px }
+.cover__city { border:none; background:none; color:var(--ink); font-family:var(--font-serif);
+               font-size:19px; font-style:italic; cursor:pointer; padding:2px;
+               border-bottom:1px solid transparent; transition:border-color .16s,color .16s }
+.cover__city:hover { border-color:var(--accent); color:var(--accent) }
+/* Show panel hint */
+.show-panel-hint { position:fixed; top:18px; left:18px; z-index:10; padding:8px 13px;
+                   border:1px solid var(--rule); border-radius:2px;
+                   background:var(--panel-bg); backdrop-filter:blur(10px);
+                   color:var(--text-dim); font-family:inherit; font-size:10.5px;
+                   font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+                   cursor:pointer; opacity:0; pointer-events:none; transition:opacity .25s }
+.show-panel-hint.visible { opacity:1; pointer-events:auto }
+/* Present title (shown when panel hidden + city loaded) */
+.present-title { position:fixed; left:36px; bottom:36px; z-index:8; pointer-events:none;
+                 animation:title-in .95s cubic-bezier(.16,1,.3,1) }
+@keyframes title-in { 0%{opacity:0;transform:translateY(16px);filter:blur(7px)} }
+.present-title__kicker { margin:0 0 7px; font-size:10px; font-weight:600; letter-spacing:.22em;
+                          text-transform:uppercase; color:rgba(236,230,216,.75) }
+.present-title__name { margin:0; font-family:var(--font-serif);
+                       font-size:clamp(28px,4vw,54px); font-weight:800; color:#fff }
+.present-title__rule { margin-top:12px; height:3px; width:180px; background:var(--spectrum) }
+/* Diff controls */
+.diff-controls { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px }
+.diff-controls .select { min-width:0 }
+/* Data-source status badge + hover popup */
+.src-badge { position:relative; margin-left:auto; cursor:help; line-height:1 }
+.src-badge__dot { display:block; width:7px; height:7px; border-radius:50%;
+                  background:var(--rule); transition:background .2s }
+.src-badge__dot--ready   { background:#6f9e6a }
+.src-badge__dot--loading { background:#b9933f; animation:pulse 1s ease-in-out infinite }
+.src-badge__dot--error   { background:var(--accent) }
+.src-popup { position:absolute; right:0; top:calc(100% + 8px); width:240px; z-index:50;
+             display:none; background:var(--surface); border:1px solid var(--rule);
+             border-radius:var(--radius); padding:12px;
+             box-shadow:var(--frame-shadow-md); pointer-events:auto }
+.src-badge:hover .src-popup { display:block }
+.src-popup__hd { font-size:9.5px; font-weight:700; letter-spacing:.14em;
+                 text-transform:uppercase; color:var(--text-dim); margin-bottom:8px }
+.src-popup__city { display:flex; align-items:flex-start; gap:7px; margin:4px 0;
+                   font-size:11px; color:var(--text-dim) }
+.src-popup__city strong { color:var(--ink) }
+.src-popup__err { font-size:10px; color:var(--accent); margin-top:2px; line-height:1.4 }
+.src-popup__advice { margin-top:10px; padding-top:10px; border-top:1px solid var(--rule-soft);
+                     font-size:10px; color:var(--text-faint); line-height:1.55 }
+.src-popup__retry { display:block; width:100%; margin-top:8px; padding:6px;
+                    border:1px solid var(--rule); background:none; color:var(--text-dim);
+                    font-family:inherit; font-size:10px; font-weight:600;
+                    letter-spacing:.08em; text-transform:uppercase;
+                    border-radius:2px; cursor:pointer; transition:all .14s }
+.src-popup__retry:hover { border-color:var(--ink); color:var(--ink) }
+/* Generic inline "i" hover hint (small text tooltip next to a label) */
+.info-hint { position:relative; display:inline-flex; align-items:center; justify-content:center;
+             width:13px; height:13px; border-radius:50%; border:1px solid var(--rule);
+             font-size:8.5px; font-weight:700; font-style:italic; font-family:var(--font-serif);
+             color:var(--text-faint); cursor:help; margin-left:5px; vertical-align:middle }
+.info-hint:hover { border-color:var(--ink); color:var(--ink) }
+.info-hint__pop { position:absolute; left:50%; transform:translateX(-50%); bottom:calc(100% + 8px);
+                   width:180px; padding:8px 10px; background:var(--surface); border:1px solid var(--rule);
+                   border-radius:var(--radius); font-size:10.5px; line-height:1.4; color:var(--text-dim);
+                   box-shadow:var(--frame-shadow-md); display:none; z-index:50;
+                   text-align:left; font-style:normal; text-transform:none; letter-spacing:normal }
+.info-hint:hover .info-hint__pop { display:block }
+/* Info button */
+.masthead { position:relative }
+.info-btn { position:absolute; top:0; right:0; width:22px; height:22px;
+            border-radius:50%; border:1px solid var(--rule); background:none;
+            color:var(--text-dim); font-size:13px; font-family:var(--font-serif);
+            font-style:italic; font-weight:700; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            transition:border-color .14s,color .14s; line-height:1 }
+.info-btn:hover { border-color:var(--ink); color:var(--ink) }
+/* Info modal */
+.info-overlay { position:fixed; inset:0; z-index:100;
+                display:flex; align-items:center; justify-content:center;
+                background:rgba(11,11,12,.72); backdrop-filter:blur(5px);
+                animation:panel-in .22s ease }
+.info-overlay[hidden] { display:none }
+.info-card { width:min(480px,calc(100vw - 48px)); background:var(--surface);
+             border:1px solid var(--rule); border-radius:var(--radius);
+             padding:24px; box-shadow:var(--frame-shadow);
+             animation:panel-in .32s cubic-bezier(.16,1,.3,1) }
+.info-card__hd { display:flex; align-items:baseline; justify-content:space-between;
+                 margin-bottom:20px; gap:12px }
+.info-card__title { margin:0; font-family:var(--font-serif); font-size:19px;
+                    font-weight:700; color:var(--ink) }
+.info-card__tabs { margin-bottom:14px }
+.info-card__body { display:flex; flex-direction:column; gap:16px }
+.info-tab { display:flex; flex-direction:column; gap:16px }
+.info-section h3 { margin:0 0 5px; font-size:9.5px; font-weight:700;
+                   letter-spacing:.2em; text-transform:uppercase; color:var(--accent) }
+.info-section p { margin:0; font-size:12.5px; line-height:1.65; color:var(--text-dim) }
+.info-section strong { color:var(--ink); font-weight:600 }
+.info-section a { color:var(--ink); text-underline-offset:2px }
+/* Spinner */
+.spinner { width:11px; height:11px; border-radius:50%; border:2px solid var(--rule);
+           border-top-color:var(--ink); animation:spin .7s linear infinite; flex:none }
+@keyframes spin { to{transform:rotate(360deg)} }
+/* Section visibility */
+.section[data-show-for] { display:none }
+</style>
+</head>
+<body>
+<div class="app">
+  <canvas id="stripes-canvas" class="stripes-canvas"></canvas>
+
+  <!-- Welcome overlay -->
+  <div class="overlay overlay--welcome" id="cover">
+    <div class="cover">
+      <p class="cover__kicker" data-i18n="kicker">Open Source Climate Data</p>
+      <h1 class="cover__title">Warming Stripes</h1>
+      <div class="cover__spectrum"></div>
+      <p class="cover__dek" data-i18n="cover_dek">Paint any city's true thermal history in colour and explore daily, weekly, monthly, and yearly comparisons to understand how global warming has changed<br>the climate of our cities.</p>
+      <div class="cover__cities" id="cover-cities">
+        <span class="cover__begin" data-i18n="cover_begin">Begin with</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control panel -->
+  <aside class="panel" id="main-panel">
+    <div class="masthead">
+      <p class="masthead__kicker" data-i18n="kicker">Open Source Climate Data</p>
+      <h1 class="masthead__title">Warming Stripes</h1>
+      <button class="info-btn" id="info-btn" data-i18n-attr="title:info_btn_title" title="About data &amp; method">i</button>
+      <div class="masthead__spectrum"></div>
+    </div>
+
+    <!-- 01 City -->
+    <section class="section">
+      <h2 class="section__label" data-i18n="section_city">City</h2>
+      <div class="city-search">
+        <div class="city-search__input-wrap">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="flex:none;opacity:.5">
+            <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input type="text" class="city-search__input" id="city-input" data-i18n-attr="placeholder:city_search_placeholder" placeholder="Search for a city…" autocomplete="off" spellcheck="false">
+        </div>
+        <ul class="city-search__dropdown" id="city-dropdown" hidden></ul>
+      </div>
+      <ul class="city-list" id="city-list"></ul>
+    </section>
+
+    <!-- 02 Data source -->
+    <section class="section">
+      <h2 class="section__label"><span data-i18n="section_datasource">Data source</span>
+        <span class="src-badge" id="src-badge">
+          <span class="src-badge__dot" id="src-badge-dot"></span>
+          <div class="src-popup" id="src-popup">
+            <div class="src-popup__hd" data-i18n="src_popup_title">Data fetch status</div>
+            <p style="font-size:10px;color:var(--text-faint);margin:0" data-i18n="src_popup_none">No cities loaded yet.</p>
+          </div>
+        </span>
+      </h2>
+      <div class="seg" id="model-seg">
+        <button class="seg__btn is-on" data-val="era5_land">ERA5-Land</button>
+        <button class="seg__btn"        data-val="era5">ERA5</button>
+        <button class="seg__btn"        data-val="cerra">CERRA</button>
+        <button class="seg__btn"        data-val="ecmwf_ifs">IFS</button>
+      </div>
+      <p class="hint" id="model-hint" style="font-size:10px"></p>
+    </section>
+
+    <!-- 03 Mode -->
+    <section class="section">
+      <h2 class="section__label" data-i18n="section_mode">Mode</h2>
+      <div class="seg" id="mode-seg">
+        <button class="seg__btn is-on" data-val="single" data-i18n="mode_single">Single</button>
+        <button class="seg__btn" data-val="compare" data-i18n="mode_compare">Compare</button>
+      </div>
+    </section>
+
+    <!-- 03 Granularity -->
+    <section class="section">
+      <h2 class="section__label" data-i18n="section_granularity">Granularity</h2>
+      <div class="seg" id="gran-seg">
+        <button class="seg__btn" data-val="daily" data-i18n="gran_daily">Day</button>
+        <button class="seg__btn" data-val="weekly" data-i18n="gran_weekly">Week</button>
+        <button class="seg__btn" data-val="monthly" data-i18n="gran_monthly">Month</button>
+        <button class="seg__btn is-on" data-val="yearly" data-i18n="gran_yearly">Year</button>
+      </div>
+    </section>
+
+    <!-- 04 Temperature -->
+    <section class="section">
+      <h2 class="section__label" data-i18n="section_variable">Temperature (°C)</h2>
+      <div class="seg" id="var-seg">
+        <button class="seg__btn" data-val="min" data-i18n="var_min">Minimum</button>
+        <button class="seg__btn is-on" data-val="mean" data-i18n="var_mean">Mean</button>
+        <button class="seg__btn" data-val="max" data-i18n="var_max">Maximum</button>
+      </div>
+    </section>
+
+    <!-- 05 Coloring -->
+    <section class="section">
+      <h2 class="section__label" data-i18n="section_coloring">Coloring</h2>
+      <div class="seg" id="color-seg">
+        <button class="seg__btn is-on" data-val="anomaly" data-i18n="color_anomaly">Anomaly</button>
+        <button class="seg__btn" data-val="absolute" data-i18n="color_absolute">Absolute</button>
+      </div>
+    </section>
+
+    <!-- 06 Baseline (anomaly only) -->
+    <section class="section" id="baseline-section">
+      <h2 class="section__label" data-i18n="section_baseline">Baseline</h2>
+      <div class="field-row">
+        <span class="field-row__label"><span data-i18n="baseline_period_label">Period</span>
+          <span class="info-hint">i<span class="info-hint__pop" data-i18n="baseline_period_info">WMO/Copernicus standard normal</span></span>
+        </span>
+        <div class="year-range">
+          <input type="number" class="year-input" id="baseline-start" value="1961" min="1940" max="2024">
+          <span class="year-range__dash">&#8211;</span>
+          <input type="number" class="year-input" id="baseline-end" value="1990" min="1941" max="2025">
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 Range -->
+    <section class="section">
+      <h2 class="section__label" data-i18n="section_range">Range</h2>
+      <!-- Yearly: multi-year span -->
+      <div class="field-row" id="range-multi">
+        <span class="field-row__label" data-i18n="range_years_label">Years</span>
+        <div class="year-range">
+          <div class="year-stepper">
+            <input type="number" class="year-input" id="range-start" value="1961" min="1940" max="2024">
+            <div class="year-stepper__btns">
+              <button type="button" class="year-stepper__btn" data-dir="up" data-i18n-attr="aria-label:aria_increase_start_year" aria-label="Increase start year">&#9650;</button>
+              <button type="button" class="year-stepper__btn" data-dir="down" data-i18n-attr="aria-label:aria_decrease_start_year" aria-label="Decrease start year">&#9660;</button>
+            </div>
+          </div>
+          <span class="year-range__dash">&#8211;</span>
+          <div class="year-stepper">
+            <input type="number" class="year-input" id="range-end" value="2025" min="1941" max="2025">
+            <div class="year-stepper__btns">
+              <button type="button" class="year-stepper__btn" data-dir="up" data-i18n-attr="aria-label:aria_increase_end_year" aria-label="Increase end year">&#9650;</button>
+              <button type="button" class="year-stepper__btn" data-dir="down" data-i18n-attr="aria-label:aria_decrease_end_year" aria-label="Decrease end year">&#9660;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Daily / Weekly / Monthly: single year -->
+      <div class="field-row" id="range-single" style="display:none">
+        <span class="field-row__label" data-i18n="range_year_label">Year</span>
+        <div class="year-stepper">
+          <input type="number" class="year-input" id="selected-year" value="2025" min="2000" max="2025">
+          <div class="year-stepper__btns">
+            <button type="button" class="year-stepper__btn" data-dir="up" data-i18n-attr="aria-label:aria_increase_year" aria-label="Increase year">&#9650;</button>
+            <button type="button" class="year-stepper__btn" data-dir="down" data-i18n-attr="aria-label:aria_decrease_year" aria-label="Decrease year">&#9660;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 Compare cities (compare mode only) -->
+    <section class="section" id="compare-section" style="display:none">
+      <h2 class="section__label" data-i18n="section_compare">Compare</h2>
+      <div class="diff-controls">
+        <select class="select" id="diff-a-sel"></select>
+        <span style="font-size:11px;color:var(--text-faint)" data-i18n="compare_vs">vs</span>
+        <select class="select" id="diff-b-sel"></select>
+      </div>
+      <div class="field-row">
+        <span class="field-row__label" data-i18n="compare_scale_label">Scale</span>
+        <div class="seg" id="scale-seg" style="width:auto">
+          <button class="seg__btn is-on" data-val="shared" style="padding:7px 10px" data-i18n="seg_shared">Shared</button>
+          <button class="seg__btn" data-val="independent" style="padding:7px 10px" data-i18n="seg_indep">Indep.</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 Chart View -->
+    <section class="section">
+      <h2 class="section__label"><span data-i18n="section_chartview">Chart View</span>
+        <span class="info-hint">i<span class="info-hint__pop" data-i18n="chartview_info">Bar chart shows all cities in list 01, side by side, yearly anomaly, shared axis &amp; colour scale.</span></span>
+      </h2>
+      <div class="seg" id="chartview-seg">
+        <button class="seg__btn is-on" data-val="stripes" data-i18n="seg_stripes">Stripes</button>
+        <button class="seg__btn" data-val="bar" data-i18n="seg_bar">Bar Chart</button>
+      </div>
+    </section>
+
+    <!-- 10 Export -->
+    <section class="section">
+      <h2 class="section__label" data-i18n="section_export">Export</h2>
+      <div class="footer-row">
+        <button class="btn btn--primary" id="export-png-btn" data-i18n="export_png">PNG</button>
+        <button class="btn btn--primary" id="export-svg-btn" data-i18n="export_svg">SVG</button>
+        <button class="btn btn--primary" id="export-gif-btn" data-i18n="export_gif" disabled style="opacity:.35;cursor:default;pointer-events:none">GIF</button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="panel__footer">
+      <div class="footer-row footer-row--controls">
+        <div class="footer-col">
+          <h2 class="section__label" data-i18n="section_colors">Colors</h2>
+          <div class="seg">
+            <button class="seg__btn is-on" id="theme-dark" onclick="setTheme('dark')" data-i18n="theme_dark">Dark</button>
+            <button class="seg__btn" id="theme-paper" onclick="setTheme('paper')" data-i18n="theme_paper">Paper</button>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h2 class="section__label" data-i18n="section_language">Language</h2>
+          <div class="seg" id="lang-seg">
+            <button class="seg__btn" id="lang-en" onclick="setLang('en')">ENG</button>
+            <button class="seg__btn" id="lang-it" onclick="setLang('it')">ITA</button>
+          </div>
+        </div>
+      </div>
+      <p class="panel__shortcuts" data-i18n="shortcuts_hint">
+        <kbd>M</kbd> mode &nbsp;<kbd>C</kbd> coloring &nbsp;<kbd>T</kbd> theme &nbsp;<kbd>H</kbd> panel &nbsp;<kbd>Esc</kbd> hide
+      </p>
+    </div>
+  </aside>
+
+  <button class="show-panel-hint" id="show-hint" onclick="togglePanel()" data-i18n="show_panel_hint">&#9654; Show panel</button>
+
+  <div class="present-title" id="present-title" style="display:none">
+    <p class="present-title__kicker" data-i18n="present_title_kicker">Climate Warming Stripes</p>
+    <h2 class="present-title__name" id="present-title-name"></h2>
+    <div class="present-title__rule"></div>
+  </div>
+
+  <div class="hover-line" id="hover-line"></div>
+  <div class="tooltip" id="tooltip" style="display:none"></div>
+
+  <!-- Info modal -->
+  <div class="info-overlay" id="info-overlay" hidden>
+    <div class="info-card">
+      <div class="info-card__hd">
+        <h2 class="info-card__title" data-i18n="info_modal_title">Data &amp; Method</h2>
+        <button class="icon-btn" id="info-close" data-i18n-attr="title:info_close_title" title="Close">&#x2715;</button>
+      </div>
+      <div class="seg info-card__tabs" id="info-tab-seg">
+        <button class="seg__btn is-on" data-val="sources" data-i18n="info_tab_sources">Sources</button>
+        <button class="seg__btn" data-val="method" data-i18n="info_tab_method">Method</button>
+        <button class="seg__btn" data-val="credits" data-i18n="info_tab_credits">Credits</button>
+      </div>
+      <div class="info-card__body">
+        <div class="info-tab" data-tab="sources">
+          <div class="info-section">
+            <h3 data-i18n="info_sources_h1">Data sources</h3>
+            <p data-i18n="info_sources_p1">All data is served by the <strong>Open-Meteo Archive API</strong> (free,
+            no API key). Four reanalysis datasets are available:</p>
+            <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:11px">
+              <thead><tr style="color:var(--text-faint);text-transform:uppercase;letter-spacing:.1em;font-size:9px">
+                <th style="text-align:left;padding:3px 0" data-i18n="info_table_source">Source</th>
+                <th style="text-align:left;padding:3px 6px" data-i18n="info_table_grid">Grid</th>
+                <th style="text-align:left;padding:3px 0" data-i18n="info_table_period">Period</th>
+                <th style="text-align:left;padding:3px 6px" data-i18n="info_table_coverage">Coverage</th>
+              </tr></thead>
+              <tbody style="color:var(--text-dim)">
+                <tr><td style="padding:4px 0"><strong style="color:var(--ink)">ERA5-Land</strong></td><td style="padding:4px 6px">~11 km</td><td style="padding:4px 0">1950–now</td><td style="padding:4px 6px" data-i18n="info_coverage_global">Global</td></tr>
+                <tr><td style="padding:4px 0"><strong style="color:var(--ink)">ERA5</strong></td><td style="padding:4px 6px">~25 km</td><td style="padding:4px 0">1940–now</td><td style="padding:4px 6px" data-i18n="info_coverage_global">Global</td></tr>
+                <tr><td style="padding:4px 0"><strong style="color:var(--ink)">CERRA</strong></td><td style="padding:4px 6px">~5 km</td><td style="padding:4px 0">1985–2021</td><td style="padding:4px 6px" data-i18n="info_coverage_europe">Europe only</td></tr>
+                <tr><td style="padding:4px 0"><strong style="color:var(--ink)">ECMWF IFS</strong></td><td style="padding:4px 6px">~9 km</td><td style="padding:4px 0">2017–now</td><td style="padding:4px 6px" data-i18n="info_coverage_global">Global</td></tr>
+              </tbody>
+            </table>
+            <p style="margin-top:8px" data-i18n="info_sources_p2">ERA5 and ERA5-Land are produced by ECMWF and
+            updated daily with a ~5-day lag. CERRA is a regional reanalysis for Europe
+            with the finest spatial resolution — recommended for Italian cities.
+            ECMWF IFS covers only recent years but at high resolution.</p>
+          </div>
+        </div>
+        <div class="info-tab" data-tab="method" style="display:none">
+          <div class="info-section">
+            <h3 data-i18n="info_method_h1">Anomaly calculation</h3>
+            <p data-i18n="info_method_p1">For each stripe, the <strong>anomaly</strong> is the departure of that
+            period's mean temperature from the <strong>1961–1990 WMO standard climate
+            normal</strong> — the reference period recommended by the World Meteorological
+            Organization and used by Copernicus/ECMWF. The comparison is always
+            like-for-like: a July stripe is compared to the average July of 1961–1990,
+            a Monday week-stripe to the average of the same ISO week across 1961–1990,
+            and so on. Colour intensity is scaled to ±3 standard deviations of the
+            baseline distribution.</p>
+          </div>
+          <div class="info-section">
+            <h3 data-i18n="info_method_h2">Period means</h3>
+            <p data-i18n="info_method_p2">Each stripe value is the <strong>arithmetic mean</strong> of all valid
+            daily readings within the chosen granularity window — a calendar day, ISO
+            week, calendar month, or calendar year. Days with missing ERA5 values are
+            excluded from the average.</p>
+          </div>
+          <div class="info-section">
+            <h3 data-i18n="info_method_h3">Absolute colour scale</h3>
+            <p data-i18n="info_method_p3">When <em>Absolute</em> colouring is selected, <strong>Mean</strong> uses
+            the full RdBu palette mapped linearly from the coldest to the warmest value
+            in the current dataset. <strong>Max</strong> and <strong>Min</strong> use
+            fixed half-palettes instead — Max ranges white (0°C) to dark red (40°C),
+            Min ranges dark blue (−20°C) to white (0°C) — so a mild 12°C reading is
+            never mistaken for deep cold.</p>
+          </div>
+        </div>
+        <div class="info-tab" data-tab="credits" style="display:none">
+          <div class="info-section">
+            <h3 data-i18n="info_credits_h1">Design inspiration</h3>
+            <p data-i18n="info_credits_p1">The visual concept and interaction design of this viewer is inspired by
+            <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Thermachrome</a>,
+            created by <strong>Alejandro Quinto Fernández</strong>
+            (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>).
+            This is an independent re-creation built for EETRA srl SB, extended with
+            local Italian ERA5 station data, multi-city comparison, and a classic
+            bar-chart view.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend" id="legend" style="display:none">
+    <div class="legend__unit" id="legend-unit"></div>
+    <div class="legend__bar" id="legend-bar" style="background:var(--spectrum)"></div>
+    <div class="legend__ticks" id="legend-ticks"></div>
+  </div>
+
+  <div class="barchart-overlay" id="barchart-overlay">
+    <div class="barchart-shell">
+      <div class="barchart-nav" id="barchart-nav" hidden>
+        <button type="button" class="barchart-nav__btn" id="barchart-prev" data-i18n-attr="aria-label:aria_prev_city" aria-label="Previous city">&#8249;</button>
+        <span class="barchart-nav__label" id="barchart-nav-label"></span>
+        <button type="button" class="barchart-nav__btn" id="barchart-next" data-i18n-attr="aria-label:aria_next_city" aria-label="Next city">&#8250;</button>
+      </div>
+      <div class="barchart-grid" id="barchart-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+const S = {
+  cities: [],          // [{id,name,country,lat,lon,label,status}]
+  mode: 'single',      // single | collage | compare
+  granularity: 'yearly',
+  variable: 'mean',
+  coloring: 'anomaly',
+  baselineStart: 1961,
+  baselineEnd: 1990,
+  rangeStart: 1961,
+  rangeEnd: 2025,
+  selectedYear: 2025,
+  sharedScale: true,
+  collageYears: 20,
+  collageCityId: null,
+  compareA: null,
+  compareB: null,
+  panelVisible: true,
+  model: 'era5_land',  // era5_land | era5 | cerra | ecmwf_ifs
+  chartView: 'stripes', // stripes | bar
+  barIndex: 0,           // single/collage bar-chart carousel index
+  lang: 'en',            // en | it — UI language
+};
+
+// ─── i18n ───────────────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    kicker: 'Open Source Climate Data',
+    cover_dek: "Paint any city's true thermal history in colour and explore daily, weekly, monthly, and yearly comparisons to understand how global warming has changed<br>the climate of our cities.",
+    cover_begin: 'Begin with',
+    info_btn_title: 'About data & method',
+    section_city: 'City',
+    section_datasource: 'Data source',
+    section_mode: 'Mode',
+    section_granularity: 'Granularity',
+    section_variable: 'Temperature (°C)',
+    section_coloring: 'Coloring',
+    section_baseline: 'Baseline',
+    section_range: 'Range',
+    section_compare: 'Compare',
+    section_chartview: 'Chart View',
+    section_export: 'Export',
+    section_colors: 'Colors',
+    section_language: 'Language',
+    chartview_info: 'Bar chart shows all cities in list 01, side by side, yearly anomaly, shared axis &amp; colour scale.',
+    baseline_period_label: 'Period',
+    baseline_period_info: 'WMO/Copernicus standard normal',
+    range_years_label: 'Years',
+    range_year_label: 'Year',
+    compare_vs: 'vs',
+    compare_scale_label: 'Scale',
+    seg_shared: 'Shared',
+    seg_indep: 'Indep.',
+    seg_stripes: 'Stripes',
+    seg_bar: 'Bar Chart',
+    theme_dark: 'Dark',
+    theme_paper: 'Paper',
+    export_png: 'PNG',
+    export_gif: 'GIF',
+    export_svg: 'SVG',
+    shortcuts_hint: '<kbd>M</kbd> mode &nbsp;<kbd>C</kbd> coloring &nbsp;<kbd>T</kbd> theme &nbsp;<kbd>L</kbd> language &nbsp;<kbd>H</kbd> panel &nbsp;<kbd>Esc</kbd> hide',
+    city_search_placeholder: 'Search for a city…',
+    aria_increase_start_year: 'Increase start year',
+    aria_decrease_start_year: 'Decrease start year',
+    aria_increase_end_year: 'Increase end year',
+    aria_decrease_end_year: 'Decrease end year',
+    aria_increase_year: 'Increase year',
+    aria_decrease_year: 'Decrease year',
+    aria_prev_city: 'Previous city',
+    aria_next_city: 'Next city',
+    mode_single: 'Single',
+    mode_compare: 'Compare',
+    gran_daily: 'Day',
+    gran_weekly: 'Week',
+    gran_monthly: 'Month',
+    gran_yearly: 'Year',
+    var_min: 'Minimum',
+    var_mean: 'Mean',
+    var_max: 'Maximum',
+    color_anomaly: 'Anomaly',
+    color_absolute: 'Absolute',
+    show_panel_hint: '&#9654; Show panel',
+    present_title_kicker: 'Climate Warming Stripes',
+    info_modal_title: 'Data &amp; Method',
+    info_close_title: 'Close',
+    info_tab_sources: 'Sources',
+    info_tab_method: 'Method',
+    info_tab_credits: 'Credits',
+    info_sources_h1: 'Data sources',
+    info_sources_p1: 'All data is served by the <strong>Open-Meteo Archive API</strong> (free, no API key). Four reanalysis datasets are available:',
+    info_table_source: 'Source',
+    info_table_grid: 'Grid',
+    info_table_period: 'Period',
+    info_table_coverage: 'Coverage',
+    info_coverage_global: 'Global',
+    info_coverage_europe: 'Europe only',
+    info_sources_p2: 'ERA5 and ERA5-Land are produced by ECMWF and updated daily with a ~5-day lag. CERRA is a regional reanalysis for Europe with the finest spatial resolution — recommended for Italian cities. ECMWF IFS covers only recent years but at high resolution.',
+    info_method_h1: 'Anomaly calculation',
+    info_method_p1: "For each stripe, the <strong>anomaly</strong> is the departure of that period's mean temperature from the <strong>1961–1990 WMO standard climate normal</strong> — the reference period recommended by the World Meteorological Organization and used by Copernicus/ECMWF. The comparison is always like-for-like: a July stripe is compared to the average July of 1961–1990, a Monday week-stripe to the average of the same ISO week across 1961–1990, and so on. Colour intensity is scaled to ±3 standard deviations of the baseline distribution.",
+    info_method_h2: 'Period means',
+    info_method_p2: 'Each stripe value is the <strong>arithmetic mean</strong> of all valid daily readings within the chosen granularity window — a calendar day, ISO week, calendar month, or calendar year. Days with missing ERA5 values are excluded from the average.',
+    info_method_h3: 'Absolute colour scale',
+    info_method_p3: 'When <em>Absolute</em> colouring is selected, <strong>Mean</strong> uses the full RdBu palette mapped linearly from the coldest to the warmest value in the current dataset. <strong>Maximum</strong> and <strong>Minimum</strong> use fixed half-palettes instead — Maximum ranges white (0°C) to dark red (40°C), Minimum ranges dark blue (−20°C) to white (0°C) — so a mild 12°C reading is never mistaken for deep cold.',
+    info_credits_h1: 'Design inspiration',
+    info_credits_p1: 'The visual concept and interaction design of this viewer is inspired by <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Thermachrome</a>, created by <strong>Alejandro Quinto Fernández</strong> (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>). This is an independent re-creation built for EETRA srl SB, extended with local Italian ERA5 station data, multi-city comparison, and a classic bar-chart view.',
+    drag_to_reorder: 'Drag to reorder',
+    remove_city: 'Remove',
+    era5_local_title: 'Served from local ERA5 parquet',
+    dropdown_no_cities: 'No cities found',
+    src_popup_title: 'Data fetch status',
+    src_popup_none: 'No cities loaded yet.',
+    src_popup_retry: '↺ Retry failed cities',
+    advice_ratelimit: '<strong>Rate limit hit.</strong> Open-Meteo allows ~10 000 calls/day. Wait a few minutes, then retry — or switch to a different source, which uses a separate endpoint.',
+    advice_cerra: '<strong>CERRA is Europe-only.</strong> Cities outside Europe will fail with this source. Switch to ERA5-Land or ERA5 for global coverage.',
+    advice_generic: 'Fetch failed. Check your internet connection, or try a different data source.',
+    unknown_error: 'Unknown error',
+    model_note_era5_land: '1950–now · global · best for surface temp',
+    model_note_era5: '1940–now · global · longest record',
+    model_note_cerra: '1985–2021 · Europe only · highest resolution',
+    model_note_ecmwf_ifs: '2017–now · global · most recent',
+    legend_anomaly_vs: 'Anomaly vs {start}–{end}{year}',
+    legend_baseline_zero: '0° baseline',
+    legend_abs_max: 'Absolute Maximum °C (0–40)',
+    legend_abs_min: 'Absolute Minimum °C (−20–0)',
+    legend_abs_mean: 'Absolute Mean °C (5–25)',
+    tooltip_anomaly: 'Anomaly',
+    tooltip_baseline: 'Baseline',
+    bar_subtitle_anomaly: '{v} anomaly vs {start}–{end}{year} [°C]',
+    bar_subtitle_max: '{v} absolute max temperature [°C]',
+    bar_subtitle_min: '{v} absolute min temperature [°C]',
+    bar_subtitle_mean: '{v} absolute temperature [°C]',
+    bar_xaxis_weeks: 'Weeks',
+    date_week_of: 'Week of {date} (WK {wk})',
+    month_abbr: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    locale: 'en-GB',
+  },
+  it: {
+    kicker: 'Dati climatici open source',
+    cover_dek: "Dipingi la vera storia termica di qualsiasi città usando il colore ed effettua confronti giornalieri, settimanali, mensili e annuali per comprendere come il riscaldamento globale ha modificato<br>il clima delle nostre città.",
+    cover_begin: 'Inizia con',
+    info_btn_title: 'Informazioni su dati e metodo',
+    section_city: 'Città',
+    section_datasource: 'Fonte dati',
+    section_mode: 'Modalità',
+    section_granularity: 'Granularità',
+    section_variable: 'Temperatura (°C)',
+    section_coloring: 'Colorazione',
+    section_baseline: 'Riferimento',
+    section_range: 'Intervallo',
+    section_compare: 'Confronto',
+    section_chartview: 'Vista grafico',
+    section_export: 'Esporta',
+    section_colors: 'Colori',
+    section_language: 'Lingua',
+    chartview_info: 'Il grafico a barre mostra tutte le città nell\'elenco 01, affiancate, anomalia annuale, asse e scala colore condivisi.',
+    baseline_period_label: 'Periodo',
+    baseline_period_info: 'Normale climatologica standard OMM/Copernicus',
+    range_years_label: 'Anni',
+    range_year_label: 'Anno',
+    compare_vs: 'contro',
+    compare_scale_label: 'Scala',
+    seg_shared: 'Condivisa',
+    seg_indep: 'Indip.',
+    seg_stripes: 'Strisce',
+    seg_bar: 'Grafico a barre',
+    theme_dark: 'Scuro',
+    theme_paper: 'Chiaro',
+    export_png: 'PNG',
+    export_gif: 'GIF',
+    export_svg: 'SVG',
+    shortcuts_hint: '<kbd>M</kbd> modalità &nbsp;<kbd>C</kbd> colorazione &nbsp;<kbd>T</kbd> tema &nbsp;<kbd>L</kbd> lingua &nbsp;<kbd>H</kbd> pannello &nbsp;<kbd>Esc</kbd> nascondi',
+    city_search_placeholder: 'Cerca una città…',
+    aria_increase_start_year: 'Aumenta anno iniziale',
+    aria_decrease_start_year: 'Diminuisci anno iniziale',
+    aria_increase_end_year: 'Aumenta anno finale',
+    aria_decrease_end_year: 'Diminuisci anno finale',
+    aria_increase_year: 'Aumenta anno',
+    aria_decrease_year: 'Diminuisci anno',
+    aria_prev_city: 'Città precedente',
+    aria_next_city: 'Città successiva',
+    mode_single: 'Singola',
+    mode_compare: 'Confronto',
+    gran_daily: 'Giorno',
+    gran_weekly: 'Settimana',
+    gran_monthly: 'Mese',
+    gran_yearly: 'Anno',
+    var_min: 'Minima',
+    var_mean: 'Media',
+    var_max: 'Massima',
+    color_anomaly: 'Anomalia',
+    color_absolute: 'Assoluta',
+    show_panel_hint: '&#9654; Mostra pannello',
+    present_title_kicker: 'Strisce del riscaldamento climatico',
+    info_modal_title: 'Dati e metodo',
+    info_close_title: 'Chiudi',
+    info_tab_sources: 'Fonti',
+    info_tab_method: 'Metodo',
+    info_tab_credits: 'Crediti',
+    info_sources_h1: 'Fonti dei dati',
+    info_sources_p1: "Tutti i dati sono forniti dall'<strong>Open-Meteo Archive API</strong> (gratuita, senza chiave API). Sono disponibili quattro dataset di rianalisi:",
+    info_table_source: 'Fonte',
+    info_table_grid: 'Griglia',
+    info_table_period: 'Periodo',
+    info_table_coverage: 'Copertura',
+    info_coverage_global: 'Globale',
+    info_coverage_europe: 'Solo Europa',
+    info_sources_p2: "ERA5 ed ERA5-Land sono prodotti da ECMWF e aggiornati quotidianamente con circa 5 giorni di ritardo. CERRA è una rianalisi regionale per l'Europa con la risoluzione spaziale più fine — consigliata per le città italiane. ECMWF IFS copre solo gli anni più recenti ma con alta risoluzione.",
+    info_method_h1: "Calcolo dell'anomalia",
+    info_method_p1: "Per ogni striscia, l'<strong>anomalia</strong> è lo scarto della temperatura media di quel periodo rispetto alla <strong>normale climatologica standard OMM 1961–1990</strong> — il periodo di riferimento raccomandato dall'Organizzazione Meteorologica Mondiale e utilizzato da Copernicus/ECMWF. Il confronto è sempre omogeneo: una striscia di luglio è confrontata con la media di luglio del periodo 1961–1990, una striscia settimanale del lunedì con la media della stessa settimana ISO nel periodo 1961–1990, e così via. L'intensità del colore è scalata su ±3 deviazioni standard della distribuzione di riferimento.",
+    info_method_h2: 'Medie di periodo',
+    info_method_p2: "Ogni valore di striscia è la <strong>media aritmetica</strong> di tutte le rilevazioni giornaliere valide nella finestra di granularità scelta — un giorno solare, una settimana ISO, un mese solare o un anno solare. I giorni con valori ERA5 mancanti sono esclusi dalla media.",
+    info_method_h3: 'Scala colore assoluta',
+    info_method_p3: "Quando è selezionata la colorazione <em>Assoluta</em>, <strong>Media</strong> utilizza l'intera palette RdBu mappata linearmente dal valore più freddo al più caldo nel dataset corrente. <strong>Massima</strong> e <strong>Minima</strong> utilizzano invece semi-palette fisse — Massima varia dal bianco (0°C) al rosso scuro (40°C), Minima dal blu scuro (−20°C) al bianco (0°C) — così una lettura mite di 12°C non viene mai scambiata per freddo intenso.",
+    info_credits_h1: 'Ispirazione del design',
+    info_credits_p1: 'Il concetto visivo e il design di interazione di questo visualizzatore sono ispirati a <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Thermachrome</a>, creato da <strong>Alejandro Quinto Fernández</strong> (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>). Questa è una ricreazione indipendente realizzata per EETRA srl SB, estesa con dati stazione ERA5 locali italiani, confronto multi-città e una vista classica a grafico a barre.',
+    drag_to_reorder: 'Trascina per riordinare',
+    remove_city: 'Rimuovi',
+    era5_local_title: 'Servito dal parquet ERA5 locale',
+    dropdown_no_cities: 'Nessuna città trovata',
+    src_popup_title: 'Stato recupero dati',
+    src_popup_none: 'Nessuna città caricata.',
+    src_popup_retry: '↺ Riprova città non riuscite',
+    advice_ratelimit: '<strong>Limite di richieste raggiunto.</strong> Open-Meteo consente circa 10 000 chiamate al giorno. Attendi qualche minuto e riprova — oppure passa a un\'altra fonte, che utilizza un endpoint separato.',
+    advice_cerra: '<strong>CERRA copre solo l\'Europa.</strong> Le città fuori dall\'Europa non funzioneranno con questa fonte. Passa a ERA5-Land o ERA5 per la copertura globale.',
+    advice_generic: 'Recupero dati non riuscito. Controlla la connessione internet o prova un\'altra fonte dati.',
+    unknown_error: 'Errore sconosciuto',
+    model_note_era5_land: '1950–oggi · globale · ideale per temp. superficiale',
+    model_note_era5: '1940–oggi · globale · serie storica più lunga',
+    model_note_cerra: '1985–2021 · solo Europa · massima risoluzione',
+    model_note_ecmwf_ifs: '2017–oggi · globale · più recente',
+    legend_anomaly_vs: 'Anomalia vs {start}–{end}{year}',
+    legend_baseline_zero: '0° riferimento',
+    legend_abs_max: 'Massima assoluta °C (0–40)',
+    legend_abs_min: 'Minima assoluta °C (−20–0)',
+    legend_abs_mean: 'Media assoluta °C (5–25)',
+    tooltip_anomaly: 'Anomalia',
+    tooltip_baseline: 'Riferimento',
+    bar_subtitle_anomaly: '{v} anomalia vs {start}–{end}{year} [°C]',
+    bar_subtitle_max: '{v} temperatura massima assoluta [°C]',
+    bar_subtitle_min: '{v} temperatura minima assoluta [°C]',
+    bar_subtitle_mean: '{v} temperatura assoluta [°C]',
+    bar_xaxis_weeks: 'Settimane',
+    date_week_of: 'Settimana del {date} (SETT {wk})',
+    month_abbr: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
+    locale: 'it-IT',
+  },
+};
+
+function t(key) {
+  return (I18N[S.lang] && I18N[S.lang][key]) ?? (I18N.en[key] ?? key);
+}
+
+function applyI18n() {
+  document.documentElement.lang = S.lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.innerHTML = t(key);
+  });
+  document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+    const spec = el.getAttribute('data-i18n-attr');
+    spec.split(',').forEach(pair => {
+      const [attr, key] = pair.split(':').map(s => s.trim());
+      if (attr && key) el.setAttribute(attr, t(key));
+    });
+  });
+  document.getElementById('lang-en')?.classList.toggle('is-on', S.lang === 'en');
+  document.getElementById('lang-it')?.classList.toggle('is-on', S.lang === 'it');
+}
+
+function setLang(lang, opts) {
+  const userChosen = !opts || opts.userChosen !== false;
+  S.lang = lang;
+  if (userChosen) localStorage.setItem('lang', lang);
+  applyI18n();
+  updateModelHint();
+  // Re-render everything that contains dynamically-built, language-dependent strings.
+  if (typeof renderCityList === 'function') renderCityList();
+  if (typeof updateSrcBadge === 'function') updateSrcBadge();
+  if (typeof drawScene === 'function') drawScene();
+}
+window.setLang = setLang;
+
+// Resolve initial language: saved preference wins; otherwise default to English
+// and asynchronously upgrade to Italian if IP geolocation says the visitor is
+// in Italy (only if the user hasn't picked a language in the meantime).
+(function initLang() {
+  const saved = localStorage.getItem('lang');
+  if (saved === 'en' || saved === 'it') {
+    S.lang = saved;
+    return;
+  }
+  S.lang = 'en';
+  (async () => {
+    try {
+      const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2500) });
+      if (!r.ok) return;
+      const j = await r.json();
+      if (!localStorage.getItem('lang') && j && j.country === 'IT') {
+        setLang('it', { userChosen: false });
+      }
+    } catch (_) { /* network blocked/slow — keep English */ }
+  })();
+})();
+
+// ─── Data source metadata ───────────────────────────────────────────────────
+const MODELS = {
+  era5_land: { label:'ERA5-Land', id:'era5_land', start:1950, end:null,
+               res:'~11 km', noteKey:'model_note_era5_land' },
+  era5:      { label:'ERA5',      id:'era5',      start:1940, end:null,
+               res:'~25 km', noteKey:'model_note_era5' },
+  cerra:     { label:'CERRA',     id:'cerra',     start:1985, end:2021,
+               res:'~5 km',  noteKey:'model_note_cerra' },
+  ecmwf_ifs: { label:'IFS',       id:'ecmwf_ifs', start:2017, end:null,
+               res:'~9 km',  noteKey:'model_note_ecmwf_ifs' },
+};
+
+// ─── Cache key helpers ──────────────────────────────────────────────────────
+// Raw cache is keyed by city + model so switching source triggers a fresh fetch.
+const rawCacheKey = (cityId) => `${cityId}:${S.model}`;
+
+// Raw daily data cache: `${cityId}:${model}` -> {dates, mean, max, min}
+const rawCache = new Map();
+// Aggregated series cache: key includes model via raw._id
+const seriesCache = new Map();
+
+// ─── Colour scale (RdBu 11-stop) ───────────────────────────────────────────
+const RDBU = [
+  [5,48,97],[33,102,172],[67,147,195],[146,197,222],[209,229,240],
+  [247,247,247],
+  [253,219,199],[244,165,130],[214,96,77],[178,24,43],[103,0,31],
+];
+function interpolateStops(stops, t) {
+  const c = Math.max(0, Math.min(1, t)) * (stops.length - 1);
+  const lo = Math.floor(c), hi = Math.min(stops.length-1, lo+1), f = c - lo;
+  return stops[lo].map((v,i) => Math.round(v + (stops[hi][i]-v)*f));
+}
+function rdbu(t) { return interpolateStops(RDBU, t); }
+// Half-palettes for fixed-domain Absolute Max/Min coloring (index 5 = white):
+// warm half [white..dark red] for Max (0-40°C), cool half [dark blue..white] for Min (-20-0°C)
+const RDBU_WARM = RDBU.slice(5, 11);
+const RDBU_COOL = RDBU.slice(0, 6);
+function rdbuWarm(t) { return interpolateStops(RDBU_WARM, t); }
+function rdbuCool(t) { return interpolateStops(RDBU_COOL, t); }
+// Fixed domains for the split Absolute Max/Min palettes (colour mapping)
+const ABS_MAX_DOMAIN = [0, 40];    // °C, mapped to rdbuWarm (white -> dark red)
+const ABS_MIN_DOMAIN = [-20, 0];   // °C, mapped to rdbuCool (dark blue -> white)
+const ABS_MEAN_COLOR_DOMAIN = [5, 25]; // °C, full RdBu for bar-chart Mean (blue -> red)
+// Fixed Y-axis domains for the bar chart (absolute mode)
+const BAR_ABS_MAX_Y = [0, 42];
+const BAR_ABS_MIN_Y = [-20, 0];
+const BAR_ABS_MEAN_Y = [0, 42];
+// t=0 → coldest blue, t=1 → hottest red; anomaly: centre at 0.5
+function anomalyT(anom, std) { return Math.max(0, Math.min(1, 0.5 + anom / (std * 3))); }
+function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
+
+// ─── Local ERA5 API (served by warming_stripes.py on the same origin) ─────
+// Only available when the page is served from the Python static server (port 8594).
+// Falls back silently to Open-Meteo when unavailable (embedded via components.html).
+const LOCAL_API = window.location.origin;
+
+async function checkLocalEra5(lat, lon) {
+  try {
+    const r = await fetch(`${LOCAL_API}/api/era5/search?lat=${lat}&lon=${lon}`, {signal: AbortSignal.timeout(2000)});
+    if (!r.ok) return null;
+    return await r.json();   // {id, name, lat, lon} or null
+  } catch(_) { return null; }
+}
+
+async function fetchLocalEra5(stationId) {
+  const r = await fetch(`${LOCAL_API}/api/era5/data?id=${stationId}`);
+  if (!r.ok) throw new Error(`ERA5 local: ${r.status}`);
+  const j = await r.json();
+  return { dates: j.dates, mean: j.mean, max: j.max, min: j.min, source: 'era5_local' };
+}
+
+// ─── Open-Meteo API ────────────────────────────────────────────────────────
+async function searchCities(q) {
+  const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=en&format=json`);
+  return (await r.json()).results || [];
+}
+
+async function fetchRaw(city) {
+  const key = rawCacheKey(city.id);
+  if (rawCache.has(key)) return rawCache.get(key);
+
+  // Use local ERA5 parquet when available (instant, no rate limits)
+  if (city.era5StationId) {
+    const data = await fetchLocalEra5(city.era5StationId);
+    rawCache.set(key, data);
+    return data;
+  }
+
+  // Fall back to Open-Meteo
+  const m = MODELS[S.model];
+  const startDate = `${m.start}-01-01`;
+  const endDate   = m.end ? `${m.end}-12-31` : new Date().toISOString().slice(0,10);
+  const url = `https://archive-api.open-meteo.com/v1/archive`
+    + `?latitude=${city.lat}&longitude=${city.lon}`
+    + `&start_date=${startDate}&end_date=${endDate}`
+    + `&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min`
+    + `&models=${S.model}`
+    + `&timezone=auto`;
+  const r = await fetch(url);
+  const j = await r.json();
+  if (j.error) throw new Error(j.reason || 'API error');
+  const data = { dates: j.daily.time, mean: j.daily.temperature_2m_mean,
+                 max: j.daily.temperature_2m_max, min: j.daily.temperature_2m_min };
+  rawCache.set(key, data);
+  return data;
+}
+
+// ─── Data aggregation ──────────────────────────────────────────────────────
+function isoWeek(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  const jan4 = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  const start = jan4.getTime() - (jan4.getUTCDay() || 7) * 86400000 + 86400000;
+  const week = Math.floor((d.getTime() - start) / 604800000) + 1;
+  return { y: week < 1 ? d.getUTCFullYear()-1 : d.getUTCFullYear(), w: week < 1 ? 53 : week };
+}
+
+function aggregate(raw, gran, variable, rangeStart, rangeEnd) {
+  const key = `${raw._id||''}:${gran}:${variable}:${rangeStart}:${rangeEnd}`;
+  if (seriesCache.has(key)) return seriesCache.get(key);
+  const vals = raw[variable];
+  const buckets = new Map();
+  for (let i = 0; i < raw.dates.length; i++) {
+    const v = vals[i]; if (v == null) continue;
+    const y = parseInt(raw.dates[i].slice(0,4));
+    if (y < rangeStart || y > rangeEnd) continue;
+    let k;
+    if (gran === 'daily')   { k = raw.dates[i]; }
+    else if (gran === 'yearly')  { k = String(y); }
+    else if (gran === 'monthly') { k = raw.dates[i].slice(0,7); }
+    else { const {y:wy,w} = isoWeek(raw.dates[i]); k = `${wy}-W${String(w).padStart(2,'0')}`; }
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(v);
+  }
+  const series = [];
+  for (const [k,arr] of buckets) {
+    // Aggregation must match the selected variable: Max/Min take the true
+    // extreme within the period (so a week's Max is its hottest day's max,
+    // not the average of daily maxes); Mean averages as before.
+    let v;
+    if (variable === 'max')      v = Math.max(...arr);
+    else if (variable === 'min') v = Math.min(...arr);
+    else                         v = arr.reduce((a,b)=>a+b,0)/arr.length;
+    series.push({ k, v });
+  }
+  series.sort((a,b) => a.k < b.k ? -1 : 1);
+  seriesCache.set(key, series);
+  return series;
+}
+
+function computeStats(series, baselineStart, baselineEnd, gran) {
+  // For anomaly: compute mean per "slot" (month within year, day-of-year, etc.)
+  // For yearly: just global mean/std
+  if (gran === 'yearly') {
+    const bVals = series.filter(p => {
+      const y = parseInt(p.k); return y >= baselineStart && y <= baselineEnd;
+    }).map(p => p.v);
+    if (!bVals.length) bVals.push(...series.map(p=>p.v));
+    const mean = bVals.reduce((a,b)=>a+b,0)/bVals.length;
+    const std  = Math.sqrt(bVals.reduce((a,b)=>a+(b-mean)**2,0)/bVals.length) || 1;
+    return series.map(p => ({ ...p, anom: p.v - mean, std }));
+  }
+  // monthly / weekly / daily: compute slot baseline
+  const bySlotsB = new Map(); // slot -> values (within baseline)
+  for (const p of series) {
+    const y = parseInt(p.k.slice(0,4));
+    if (y < baselineStart || y > baselineEnd) continue;
+    const slot = gran === 'monthly' ? p.k.slice(5,7)
+               : gran === 'weekly'  ? p.k.slice(6)
+               : p.k.slice(5); // MM-DD
+    if (!bySlotsB.has(slot)) bySlotsB.set(slot, []);
+    bySlotsB.get(slot).push(p.v);
+  }
+  const slotMean = new Map(), slotStd = new Map();
+  for (const [slot, vals] of bySlotsB) {
+    const m = vals.reduce((a,b)=>a+b,0)/vals.length;
+    const s = Math.sqrt(vals.reduce((a,b)=>a+(b-m)**2,0)/vals.length) || 1;
+    slotMean.set(slot, m); slotStd.set(slot, s);
+  }
+  // global std fallback
+  const allV = series.map(p=>p.v);
+  const gm = allV.reduce((a,b)=>a+b,0)/allV.length;
+  const gstd = Math.sqrt(allV.reduce((a,b)=>a+(b-gm)**2,0)/allV.length)||1;
+  return series.map(p => {
+    const slot = gran === 'monthly' ? p.k.slice(5,7)
+               : gran === 'weekly'  ? p.k.slice(6)
+               : p.k.slice(5);
+    const m = slotMean.get(slot) ?? gm;
+    const s = slotStd.get(slot) ?? gstd;
+    return { ...p, anom: p.v - m, std: s };
+  });
+}
+
+// ─── Canvas rendering ──────────────────────────────────────────────────────
+const canvas = document.getElementById('stripes-canvas');
+const ctx = canvas.getContext('2d');
+let _renderCtx = ctx;
+let lastScene = null;
+let _compareLayout = null; // [{stats, y0, h}] for compare mode, null otherwise
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = Math.max(window.innerWidth,  200) * dpr;
+  canvas.height = Math.max(window.innerHeight, 200) * dpr;
+  ctx.scale(dpr, dpr);
+  drawScene();
+}
+
+// anomDomain=[minAnom,maxAnom]: maps full spectrum to actual data range.
+// Used for sub-annual single-year views where all stripes may sit on one side
+// of the baseline (e.g. all anomalies +2…+5°C → all max red without this).
+function colorFn(point, coloring, domainMin, domainMax, anomDomain) {
+  if (coloring === 'anomaly') {
+    if (anomDomain) {
+      const [aMin, aMax] = anomDomain;
+      return rdbu(Math.max(0, Math.min(1, (point.anom - aMin) / (aMax - aMin || 1))));
+    }
+    return rdbu(anomalyT(point.anom, point.std));
+  }
+  // Absolute coloring: Max/Min use fixed split-palette domains so a hot day
+  // is always warm-toned and a cold night always cool-toned, independent of
+  // whatever range the currently displayed data happens to span.
+  if (S.variable === 'max') {
+    const t = (point.v - ABS_MAX_DOMAIN[0]) / (ABS_MAX_DOMAIN[1] - ABS_MAX_DOMAIN[0]);
+    return rdbuWarm(Math.max(0, Math.min(1, t)));
+  }
+  if (S.variable === 'min') {
+    const t = (point.v - ABS_MIN_DOMAIN[0]) / (ABS_MIN_DOMAIN[1] - ABS_MIN_DOMAIN[0]);
+    return rdbuCool(Math.max(0, Math.min(1, t)));
+  }
+  return rdbu(Math.max(0, Math.min(1, (point.v - domainMin) / (domainMax - domainMin || 1))));
+}
+
+function drawStripes(series, stats, x0, y0, w, h, coloring, domainMin, domainMax, anomDomain) {
+  const n = series.length;
+  if (!n) return;
+  const sw = w / n;
+  for (let i = 0; i < n; i++) {
+    const c = colorFn(stats[i], coloring, domainMin, domainMax, anomDomain);
+    _renderCtx.fillStyle = rgb(c);
+    const x = x0 + Math.floor(i * sw);
+    _renderCtx.fillRect(x, y0, Math.ceil((i+1)*sw) - Math.floor(i*sw), h);
+  }
+  // decade ticks (yearly only)
+  if (S.granularity === 'yearly') {
+    _renderCtx.save();
+    _renderCtx.textAlign = 'center';
+    _renderCtx.font = `500 ${Math.max(9, Math.min(11, w/80))}px Inter,sans-serif`;
+    for (let i = 0; i < series.length; i++) {
+      const yr = parseInt(series[i].k);
+      if (yr % 10 === 0) {
+        const cx = x0 + (i + 0.5) * sw;
+        _renderCtx.fillStyle = 'rgba(0,0,0,.25)';
+        _renderCtx.fillRect(cx - .5, y0, 1, h);
+        _renderCtx.fillStyle = 'rgba(255,255,255,.72)';
+        _renderCtx.fillText(yr, cx, y0 + h - 6);
+      }
+    }
+    _renderCtx.restore();
+  }
+  // monthly: year ticks
+  if (S.granularity === 'monthly') {
+    _renderCtx.save();
+    _renderCtx.textAlign = 'center';
+    _renderCtx.font = '500 9px Inter,sans-serif';
+    for (let i = 0; i < series.length; i++) {
+      if (series[i].k.endsWith('-01')) {
+        const yr = parseInt(series[i].k);
+        const cx = x0 + (i + 0.5) * sw;
+        if (yr % 5 === 0) {
+          _renderCtx.fillStyle = 'rgba(255,255,255,.65)';
+          _renderCtx.fillText(yr, cx, y0 + h - 6);
+        }
+      }
+    }
+    _renderCtx.restore();
+  }
+}
+
+function effectiveRange() {
+  if (S.granularity === 'yearly') return [S.rangeStart, S.rangeEnd];
+  return [S.selectedYear, S.selectedYear];
+}
+
+function getSeriesForCity(city) {
+  const raw = rawCache.get(rawCacheKey(city.id));
+  if (!raw) return null;
+  raw._id = rawCacheKey(city.id);
+
+  if (S.granularity !== 'yearly') {
+    // Sub-annual mode: slot baseline MUST be computed from the full history so
+    // that 1961-1990 reference values exist. A single-year series contains no
+    // baseline period data, causing the fallback to use the annual mean (~18°C)
+    // as the reference — producing nonsense anomalies like +15°C in August.
+    const m = MODELS[S.model];
+    const fullStart = m.start;
+    const fullEnd   = m.end ?? new Date().getUTCFullYear();
+    const fullSeries = aggregate(raw, S.granularity, S.variable, fullStart, fullEnd);
+    const fullStats  = computeStats(fullSeries, S.baselineStart, S.baselineEnd, S.granularity);
+    // Return only the selected year's data, carrying correct per-slot baselines.
+    return fullStats.filter(p => p.k.startsWith(String(S.selectedYear)));
+  }
+
+  const [rs, re] = effectiveRange();
+  const series = aggregate(raw, S.granularity, S.variable, rs, re);
+  return computeStats(series, S.baselineStart, S.baselineEnd, S.granularity);
+}
+
+// Symmetric anomaly domain: [-M, M] where M = max absolute anomaly in the
+// displayed data. Keeps blue and red halves of the legend balanced instead
+// of skewing toward whichever extreme happens to be larger.
+function symmetricAnomDomain(stats) {
+  const a = stats.map(p => p.anom);
+  const m = Math.max(Math.abs(Math.min(...a)), Math.abs(Math.max(...a))) || 1;
+  return [-m, m];
+}
+
+// Draws a rectangular city-name badge in the top-right corner of a compare
+// band. Dark theme: dark bg + white text. Paper theme: light bg + dark text
+// (i.e. the reverse), so the badge always reads clearly against the canvas.
+function drawCityBadge(name, bandY0) {
+  if (!name) return;
+  const isPaper = document.documentElement.getAttribute('data-theme') === 'paper';
+  const bg   = isPaper ? 'rgba(246,243,236,.92)' : 'rgba(11,11,12,.78)';
+  const text = isPaper ? '#1c1a17' : '#ece6d8';
+  const label = name.toUpperCase();
+
+  const padX = 10, padY = 6, marginTop = 10, marginRight = 12;
+  const dpr = window.devicePixelRatio || 1;
+  _renderCtx.save();
+  _renderCtx.font = '600 11px Inter,sans-serif';
+  const textW = _renderCtx.measureText(label).width;
+  const boxW = textW + padX * 2;
+  const boxH = 13 + padY * 2;
+  const x = _renderCtx.canvas.width / dpr - boxW - marginRight;
+  const y = bandY0 + marginTop;
+
+  _renderCtx.fillStyle = bg;
+  const r = 3;
+  _renderCtx.beginPath();
+  _renderCtx.moveTo(x + r, y);
+  _renderCtx.arcTo(x + boxW, y, x + boxW, y + boxH, r);
+  _renderCtx.arcTo(x + boxW, y + boxH, x, y + boxH, r);
+  _renderCtx.arcTo(x, y + boxH, x, y, r);
+  _renderCtx.arcTo(x, y, x + boxW, y, r);
+  _renderCtx.closePath();
+  _renderCtx.fill();
+
+  _renderCtx.fillStyle = text;
+  _renderCtx.textAlign = 'left';
+  _renderCtx.textBaseline = 'middle';
+  _renderCtx.fillText(label, x + padX, y + boxH / 2 + 1);
+  _renderCtx.restore();
+}
+
+function getDomain(statsList) {
+  let min = Infinity, max = -Infinity;
+  for (const stats of statsList) for (const p of stats) {
+    if (p.v < min) min = p.v; if (p.v > max) max = p.v;
+  }
+  // Absolute-temperature domain must never start above 0°C — otherwise mild
+  // positive temperatures (e.g. 12°C, the coldest value shown) would wrongly
+  // render as deep blue, implying below-freezing cold that never occurred.
+  if (min > 0) min = 0;
+  return [min, max];
+}
+
+// Symmetric anomaly domain across MULTIPLE cities' stats combined: [-M, M]
+// where M is the largest absolute anomaly seen in any of them. Used in compare
+// mode (Shared scale) so every band's colour legend reflects the true max
+// across all displayed locations, not just the first city's own baseline std.
+function combinedSymmetricAnomDomain(statsList) {
+  let m = 0;
+  for (const stats of statsList) for (const p of stats) {
+    if (Math.abs(p.anom) > m) m = Math.abs(p.anom);
+  }
+  return [-(m || 1), (m || 1)];
+}
+
+// ─── Bar chart view (alternate visualisation, replaces the stripes canvas) ──
+function getBarChartYDomain(statsList) {
+  if (S.coloring === 'anomaly') return [-BAR_ANOM_AXIS_MAX, BAR_ANOM_AXIS_MAX];
+  if (S.variable === 'max') return [...BAR_ABS_MAX_Y];
+  if (S.variable === 'min') return [...BAR_ABS_MIN_Y];
+  if (S.variable === 'mean') return [...BAR_ABS_MEAN_Y];
+  return getDomain(statsList);
+}
+
+function getBarChartColorContext(statsList, stats = statsList[0]) {
+  const useShared = statsList.length > 1 && S.mode === 'compare' && S.sharedScale;
+  let dMin, dMax;
+  if (S.coloring === 'absolute' && S.variable === 'mean') {
+    dMin = ABS_MEAN_COLOR_DOMAIN[0];
+    dMax = ABS_MEAN_COLOR_DOMAIN[1];
+  } else {
+    [dMin, dMax] = getDomain(useShared ? statsList : [stats]);
+  }
+  let anomDomain = null;
+  if (S.coloring === 'anomaly') {
+    if (useShared) {
+      anomDomain = combinedSymmetricAnomDomain(statsList);
+    } else {
+      anomDomain = symmetricAnomDomain(stats);
+    }
+  }
+  return { dMin, dMax, anomDomain };
+}
+
+// Fill a t()-sourced template like "{v} anomaly vs {start}–{end}{year} [°C]"
+function fillTemplate(template, vars) {
+  return template.replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? ''));
+}
+
+function barChartSubtitle(varLabel) {
+  if (S.coloring === 'anomaly') {
+    const yearLabel = S.granularity === 'yearly' ? '' : ` · ${S.selectedYear}`;
+    return fillTemplate(t('bar_subtitle_anomaly'), { v: varLabel, start: S.baselineStart, end: S.baselineEnd, year: yearLabel });
+  }
+  if (S.variable === 'max') return fillTemplate(t('bar_subtitle_max'), { v: varLabel });
+  if (S.variable === 'min') return fillTemplate(t('bar_subtitle_min'), { v: varLabel });
+  return fillTemplate(t('bar_subtitle_mean'), { v: varLabel });
+}
+
+function barChartXAxisTitle() {
+  if (S.granularity === 'weekly') return t('bar_xaxis_weeks');
+  if (S.granularity === 'monthly') return String(S.selectedYear);
+  return '';
+}
+
+function monthAbbr() { return t('month_abbr'); }
+
+function buildBarChartXTicks(stats, barW, marginL, Wv, marginR, Hv, marginB, labelFs) {
+  let xticks = '';
+  const n = stats.length;
+  if (!n) return xticks;
+
+  if (S.granularity === 'yearly') {
+    const years = stats.map(p => parseInt(p.k, 10));
+    const rangeSpan = S.rangeEnd - S.rangeStart + 1;
+    const xStep = rangeSpan <= 10 ? 2 : 5;
+    const minYear = years[0];
+    const maxYear = years[years.length - 1];
+    for (let y = Math.ceil(minYear / xStep) * xStep; y <= maxYear; y += xStep) {
+      const idx = years.indexOf(y);
+      if (idx < 0) continue;
+      const x = marginL + (idx + 0.5) * barW;
+      xticks += `<text x="${x.toFixed(2)}" y="${Hv-marginB+16}" text-anchor="middle" font-size="${labelFs}" fill="var(--barchart-label)">${y}</text>`;
+    }
+    return xticks;
+  }
+
+  if (S.granularity === 'monthly') {
+    for (let i = 0; i < n; i++) {
+      const m = parseInt(String(stats[i].k).slice(5, 7), 10);
+      const x = marginL + (i + 0.5) * barW;
+      xticks += `<text x="${x.toFixed(2)}" y="${Hv-marginB+16}" text-anchor="middle" font-size="${labelFs}" fill="var(--barchart-label)">${monthAbbr()[m - 1]}</text>`;
+    }
+    return xticks;
+  }
+
+  if (S.granularity === 'weekly') {
+    const weekFs = Math.min(labelFs, 10);
+    for (let i = 0; i < n; i++) {
+      const weekNum = parseInt(String(stats[i].k).split('-W')[1], 10);
+      const x = marginL + (i + 0.5) * barW;
+      xticks += `<text x="${x.toFixed(2)}" y="${Hv-marginB+16}" text-anchor="middle" font-size="${weekFs}" fill="var(--barchart-label)">${String(weekNum).padStart(2, '0')}</text>`;
+    }
+    return xticks;
+  }
+
+  if (S.granularity === 'daily') {
+    const quarterMonths = ['01', '04', '07', '10'];
+    const labeled = new Set();
+    for (let i = 0; i < n; i++) {
+      const k = stats[i].k;
+      const month = k.slice(5, 7);
+      if (!quarterMonths.includes(month) || labeled.has(month)) continue;
+      labeled.add(month);
+      const x = marginL + (i + 0.5) * barW;
+      xticks += `<text x="${x.toFixed(2)}" y="${Hv-marginB+16}" text-anchor="middle" font-size="${labelFs}" fill="var(--barchart-label)">${monthAbbr()[+month - 1]}</text>`;
+    }
+    return xticks;
+  }
+
+  const step = Math.max(1, Math.floor(n / 8));
+  for (let i = 0; i < n; i += step) {
+    const x = marginL + (i + 0.5) * barW;
+    const label = formatDate(stats[i].k, S.granularity);
+    xticks += `<text x="${x.toFixed(2)}" y="${Hv-marginB+16}" text-anchor="middle" font-size="${labelFs}" fill="var(--barchart-label)">${escapeHtml(label)}</text>`;
+  }
+  return xticks;
+}
+
+function buildBarChartXAxisTitle(Wv, marginL, marginR, Hv) {
+  const title = barChartXAxisTitle();
+  if (!title) return '';
+  const x = marginL + (Wv - marginL - marginR) / 2;
+  return `<text x="${x.toFixed(2)}" y="${Hv - 6}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--barchart-label)">${escapeHtml(title)}</text>`;
+}
+
+function buildAnomGridlines(Wv, marginL, marginR, marginT, plotH, zeroY, M, labelFs) {
+  let gridlines = '';
+  const tickLimit = Math.floor(M / 5) * 5;
+  for (let v = -tickLimit; v <= tickLimit; v += 5) {
+    if (v === 0) continue;
+    const y = zeroY - (v / M) * (plotH / 2);
+    gridlines += `<line x1="${marginL}" x2="${Wv-marginR}" y1="${y.toFixed(2)}" y2="${y.toFixed(2)}" stroke="var(--rule-soft)" stroke-width="1"/>`;
+    gridlines += `<text x="${marginL-8}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="${labelFs}" fill="var(--barchart-label)">${v > 0 ? '+' : ''}${v}</text>`;
+  }
+  gridlines += `<line x1="${marginL}" x2="${Wv-marginR}" y1="${zeroY}" y2="${zeroY}" stroke="var(--rule)" stroke-width="1"/>`;
+  gridlines += `<text x="${marginL-8}" y="${(zeroY+4).toFixed(2)}" text-anchor="end" font-size="${labelFs}" fill="var(--barchart-label-zero)">0</text>`;
+  return gridlines;
+}
+
+function isFixedBarAbsYDomain(yMin, yMax) {
+  if (S.variable === 'max') return yMin === BAR_ABS_MAX_Y[0] && yMax === BAR_ABS_MAX_Y[1];
+  if (S.variable === 'min') return yMin === BAR_ABS_MIN_Y[0] && yMax === BAR_ABS_MIN_Y[1];
+  if (S.variable === 'mean') return yMin === BAR_ABS_MEAN_Y[0] && yMax === BAR_ABS_MEAN_Y[1];
+  return false;
+}
+
+function fixedBarAbsTicks(yMin, yMax) {
+  const ticks = [];
+  for (let v = Math.ceil(yMin / 5) * 5; v <= yMax + 1e-6; v += 5) ticks.push(v);
+  return ticks;
+}
+
+function buildAbsGridlines(Wv, marginL, marginR, marginT, plotH, yMin, yMax, labelFs) {
+  let gridlines = '';
+  const span = yMax - yMin || 1;
+  let ticks;
+  if (isFixedBarAbsYDomain(yMin, yMax)) {
+    ticks = fixedBarAbsTicks(yMin, yMax);
+  } else {
+    const step = niceStep(span / 2);
+    ticks = [];
+    for (let v = Math.ceil(yMin / step) * step; v <= yMax + 1e-6; v += step) {
+      ticks.push(v);
+    }
+  }
+  for (const v of ticks) {
+    const y = marginT + plotH - ((v - yMin) / span) * plotH;
+    gridlines += `<line x1="${marginL}" x2="${Wv-marginR}" y1="${y.toFixed(2)}" y2="${y.toFixed(2)}" stroke="var(--rule-soft)" stroke-width="1"/>`;
+    gridlines += `<text x="${marginL-8}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="${labelFs}" fill="var(--barchart-label)">${v.toFixed(0)}</text>`;
+  }
+  if (yMin <= 0 && yMax >= 0) {
+    const y0 = marginT + plotH - ((0 - yMin) / span) * plotH;
+    gridlines += `<line x1="${marginL}" x2="${Wv-marginR}" y1="${y0.toFixed(2)}" y2="${y0.toFixed(2)}" stroke="var(--rule)" stroke-width="1"/>`;
+  }
+  return gridlines;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Nice round gridline step (~3 gridlines per side) for a given max magnitude
+function niceStep(maxAbs) {
+  const target = maxAbs / 3 || 0.5;
+  const mag = Math.pow(10, Math.floor(Math.log10(target)));
+  const norm = target / mag;
+  let step;
+  if (norm < 1.5) step = 1 * mag;
+  else if (norm < 3) step = 2 * mag;
+  else if (norm < 7) step = 5 * mag;
+  else step = 10 * mag;
+  return step;
+}
+
+const BAR_ANOM_AXIS_MAX = 11;
+
+function buildBarChartSVG(city, stats, scales, varLabel, barLimit) {
+  const { yDomain, dMin, dMax, anomDomain } = scales;
+  const isAnomaly = S.coloring === 'anomaly';
+  const visibleStats = barLimit ? stats.slice(0, barLimit) : stats;
+  const n = visibleStats.length;
+
+  const Wv = 780, Hv = 580;
+  const labelFs = 15;
+  const marginL = 44, marginR = Math.round(5 * 1.15), marginT = 2;
+  const marginB = barChartXAxisTitle() ? 38 : 22;
+  const plotW = Wv - marginL - marginR;
+  const plotH = Hv - marginT - marginB;
+  const zeroY = marginT + plotH / 2;
+  const barW = plotW / (stats.length || 1);
+  const barGap = Math.min(1.2, barW * 0.15);
+  const [yMin, yMax] = yDomain;
+
+  let bars = '';
+  visibleStats.forEach((p, i) => {
+    const [r, g, b] = colorFn(p, S.coloring, dMin, dMax, anomDomain);
+    const x = marginL + i * barW + barGap / 2;
+    const w = Math.max(0.4, barW - barGap);
+    const hitW = Math.max(w, Math.min(barW * 0.9, 14));
+    const hitX = x + (w - hitW) / 2;
+    const anomSign = p.anom >= 0 ? '+' : '';
+    let y, bh;
+    if (isAnomaly) {
+      const M = yMax;
+      bh = Math.min((Math.abs(p.anom) / M) * (plotH / 2), plotH / 2);
+      y = p.anom >= 0 ? zeroY - bh : zeroY;
+    } else if (S.coloring === 'absolute' && S.variable === 'min') {
+      const yZero = marginT + plotH - ((0 - yMin) / (yMax - yMin || 1)) * plotH;
+      const depth = Math.max(0, 0 - p.v);
+      bh = Math.min((depth / (0 - yMin || 1)) * plotH, plotH);
+      y = yZero;
+    } else {
+      bh = Math.min(((p.v - yMin) / (yMax - yMin || 1)) * plotH, plotH);
+      y = marginT + plotH - bh;
+    }
+    bars += `<rect class="barchart-bar-hit" x="${hitX.toFixed(2)}" y="${marginT}" width="${hitW.toFixed(2)}" height="${plotH.toFixed(2)}"
+      data-key="${escapeHtml(String(p.k))}" data-v="${p.v.toFixed(2)}" data-anom="${p.anom.toFixed(2)}" data-anom-sign="${anomSign}"/>`;
+    bars += `<rect class="barchart-bar-vis" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(0,bh).toFixed(2)}" fill="rgb(${r},${g},${b})"/>`;
+  });
+
+  const gridlines = isAnomaly
+    ? buildAnomGridlines(Wv, marginL, marginR, marginT, plotH, zeroY, yMax, labelFs)
+    : buildAbsGridlines(Wv, marginL, marginR, marginT, plotH, yMin, yMax, labelFs);
+  const xticks = buildBarChartXTicks(visibleStats, barW, marginL, Wv, marginR, Hv, marginB, labelFs);
+  const xAxisTitle = buildBarChartXAxisTitle(Wv, marginL, marginR, Hv);
+
+  return `
+    <div class="barchart-panel">
+      <p class="barchart-panel__title">${escapeHtml(city.name)}</p>
+      <p class="barchart-panel__subtitle">${barChartSubtitle(varLabel)}</p>
+      <svg class="barchart-svg" viewBox="0 0 ${Wv} ${Hv}" preserveAspectRatio="xMidYMid meet" data-city="${escapeHtml(city.name)}">${gridlines}${bars}${xticks}${xAxisTitle}</svg>
+    </div>`;
+}
+
+function layoutBarchartOverlay() {
+  const left = S.panelVisible ? 354 : 0;
+  document.getElementById('barchart-overlay').style.left = left + 'px';
+  document.documentElement.style.setProperty('--barchart-left', left + 'px');
+}
+
+function getBarChartCities() {
+  return S.cities
+    .filter(c => rawCache.has(rawCacheKey(c.id)))
+    .map(c => ({ city: c, stats: getSeriesForCity(c) }))
+    .filter(d => d.stats?.length);
+}
+
+function updateBarChartNav(perCity, index) {
+  const nav = document.getElementById('barchart-nav');
+  const label = document.getElementById('barchart-nav-label');
+  const prev = document.getElementById('barchart-prev');
+  const next = document.getElementById('barchart-next');
+  if (!nav || !label || !prev || !next) return;
+  if (perCity.length <= 1) {
+    nav.hidden = true;
+    return;
+  }
+  nav.hidden = false;
+  const current = perCity[index];
+  label.textContent = `${index + 1} / ${perCity.length} · ${current?.city?.name || ''}`;
+  prev.disabled = index <= 0;
+  next.disabled = index >= perCity.length - 1;
+}
+
+function renderBarCharts() {
+  layoutBarchartOverlay();
+  hideHoverUI();
+  const overlay = document.getElementById('barchart-overlay');
+  const grid = document.getElementById('barchart-grid');
+  const perCity = getBarChartCities();
+  if (!perCity.length) {
+    overlay.classList.remove('visible');
+    grid.innerHTML = '';
+    updateBarChartNav([], 0);
+    return;
+  }
+
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const isCompare = S.mode === 'compare';
+
+  if (isCompare) {
+    document.getElementById('barchart-nav').hidden = true;
+    const shown = perCity.slice(0, 4);
+    const allStats = shown.map(d => d.stats);
+    const sharedY = getBarChartYDomain(allStats);
+    const sharedColor = getBarChartColorContext(allStats, allStats[0]);
+    grid.className = 'barchart-grid barchart-grid--' + Math.min(4, shown.length);
+    grid.innerHTML = shown.map(({city, stats}) => {
+      const scales = S.sharedScale
+        ? { yDomain: sharedY, ...sharedColor }
+        : { yDomain: getBarChartYDomain([stats]), ...getBarChartColorContext([stats], stats) };
+      return buildBarChartSVG(city, stats, scales, varLabel);
+    }).join('');
+    updateLegend(allStats[0], sharedColor.dMin, sharedColor.dMax, sharedColor.anomDomain);
+  } else {
+    if (S.barIndex >= perCity.length) S.barIndex = perCity.length - 1;
+    if (S.barIndex < 0) S.barIndex = 0;
+    const { city, stats } = perCity[S.barIndex];
+    const scales = {
+      yDomain: getBarChartYDomain([stats]),
+      ...getBarChartColorContext([stats], stats),
+    };
+    grid.className = 'barchart-grid barchart-grid--single';
+    grid.innerHTML = buildBarChartSVG(city, stats, scales, varLabel);
+    updateBarChartNav(perCity, S.barIndex);
+    updateLegend(stats, scales.dMin, scales.dMax, scales.anomDomain);
+  }
+
+  document.getElementById('legend').style.display = '';
+
+  overlay.classList.add('visible');
+}
+
+function drawStripesContent(W, H, opts = {}) {
+  const ready = S.cities.filter(c => rawCache.has(rawCacheKey(c.id)));
+  if (!ready.length) return null;
+  const stripeLimit = opts.stripeLimit;
+  const collageCols = opts.collageCols;
+
+  if (S.mode === 'single') {
+    const city = ready[0];
+    const stats = getSeriesForCity(city);
+    if (!stats?.length) return null;
+    const slice = stripeLimit ? stats.slice(0, stripeLimit) : stats;
+    const [dMin, dMax] = getDomain([stats]);
+    const anomDomain = (S.coloring === 'anomaly') ? symmetricAnomDomain(stats) : null;
+    _compareLayout = null;
+    drawStripes(slice, slice, 0, 0, W, H, S.coloring, dMin, dMax, anomDomain);
+    return { mode: 'single', city, stats, dMin, dMax, anomDomain };
+
+  } else if (S.mode === 'compare') {
+    const cities = ready.slice(0, 4);
+    const statsList = cities.map(c => getSeriesForCity(c)).filter(Boolean);
+    if (!statsList.length) return null;
+    const [dMin, dMax] = S.sharedScale ? getDomain(statsList) : [0, 0];
+    const sharedAnomDomain = (S.coloring === 'anomaly' && S.sharedScale)
+      ? combinedSymmetricAnomDomain(statsList)
+      : null;
+
+    const n = statsList.length;
+    const bandH = Math.floor(H / n);
+    const DIVIDER_PX = 4;
+    _compareLayout = [];
+    const dividerYs = [];
+    statsList.forEach((stats, i) => {
+      const slice = stripeLimit ? stats.slice(0, stripeLimit) : stats;
+      const [mn, mx] = S.sharedScale ? [dMin, dMax] : getDomain([stats]);
+      let anomDomain = null;
+      if (S.coloring === 'anomaly') {
+        anomDomain = sharedAnomDomain || symmetricAnomDomain(stats);
+      }
+      const y0 = i * bandH;
+      const bh = (i === n - 1) ? (H - y0) : bandH;
+      drawStripes(slice, slice, 0, y0, W, bh, S.coloring, mn, mx, anomDomain);
+      _compareLayout.push({ stats, y0, h: bh });
+      drawCityBadge(cities[i]?.name || '', y0);
+      if (i < n - 1) dividerYs.push(y0 + bh);
+    });
+    _renderCtx.fillStyle = 'rgba(255,255,255,.9)';
+    for (const dy of dividerYs) {
+      _renderCtx.fillRect(0, dy - Math.floor(DIVIDER_PX / 2), W, DIVIDER_PX);
+    }
+    return {
+      mode: 'compare', cities, statsList, dMin, dMax,
+      anomDomain: S.coloring === 'anomaly' ? (sharedAnomDomain || symmetricAnomDomain(statsList[0])) : null,
+    };
+
+  } else if (S.mode === 'collage') {
+    const city = ready.find(c => c.id === S.collageCityId) || ready[0];
+    if (!city) return null;
+    const raw = rawCache.get(rawCacheKey(city.id));
+    if (!raw) return null;
+    raw._id = rawCacheKey(city.id);
+    const yrs = S.collageYears;
+    const allSeries = aggregate(raw, S.granularity, S.variable, S.rangeStart, S.rangeEnd);
+    const allStats = computeStats(allSeries, S.baselineStart, S.baselineEnd, S.granularity);
+    const yearSet = [...new Set(allStats.map(p => p.k.slice(0,4)))].slice(-yrs);
+    const visibleYears = collageCols ? yearSet.slice(0, collageCols) : yearSet;
+    const [dMin, dMax] = getDomain([allStats]);
+    const anomDomain = (S.coloring === 'anomaly') ? symmetricAnomDomain(allStats) : null;
+    const cols = visibleYears.length || 1;
+    const colW = W / cols;
+    visibleYears.forEach((yr, ci) => {
+      const yrStats = allStats.filter(p => p.k.startsWith(yr));
+      const x0 = Math.floor(ci * colW);
+      const w  = Math.ceil((ci+1)*colW) - x0;
+      drawStripes(yrStats, yrStats, x0, 0, w, H, S.coloring, dMin, dMax, anomDomain);
+      _renderCtx.save();
+      _renderCtx.fillStyle = 'rgba(255,255,255,.7)';
+      _renderCtx.font = '600 10px Inter,sans-serif';
+      _renderCtx.textAlign = 'center';
+      _renderCtx.fillText(yr, x0 + w/2, H - 8);
+      _renderCtx.restore();
+      if (ci > 0) {
+        _renderCtx.fillStyle = 'rgba(0,0,0,.3)';
+        _renderCtx.fillRect(x0, 0, 1, H);
+      }
+    });
+    _compareLayout = null;
+    return { mode: 'collage', city, allStats, yearSet, dMin, dMax, anomDomain };
+  }
+  return null;
+}
+
+function drawScene() {
+  // Use canvas CSS dimensions (accounts for min-width guard in resize())
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.width / dpr;
+  const H = canvas.height / dpr;
+  ctx.clearRect(0, 0, W, H);
+
+  if (S.chartView === 'bar') {
+    hideHoverUI();
+    canvas.style.display = 'none';
+    renderBarCharts();
+    return;
+  }
+  canvas.style.display = '';
+  document.getElementById('barchart-overlay').classList.remove('visible');
+
+  _renderCtx = ctx;
+  const scene = drawStripesContent(W, H);
+  if (!scene) return;
+
+  if (scene.mode === 'single') {
+    lastScene = { city: scene.city, stats: scene.stats };
+    updateLegend(scene.stats, scene.dMin, scene.dMax, scene.anomDomain);
+    updateTooltipData(scene.stats, 0, W);
+  } else if (scene.mode === 'compare') {
+    lastScene = { cities: scene.cities, statsList: scene.statsList };
+    updateLegend(scene.statsList[0], scene.dMin, scene.dMax, scene.anomDomain);
+  } else if (scene.mode === 'collage') {
+    lastScene = { city: scene.city, allStats: scene.allStats };
+    updateLegend(scene.allStats, scene.dMin, scene.dMax, scene.anomDomain);
+  }
+}
+
+// ─── Legend ────────────────────────────────────────────────────────────────
+function updateLegend(stats, dMin, dMax, anomDomain) {
+  const legend = document.getElementById('legend');
+  const unit   = document.getElementById('legend-unit');
+  const bar    = document.getElementById('legend-bar');
+  const ticks  = document.getElementById('legend-ticks');
+  if (!stats?.length) { legend.style.display = 'none'; return; }
+  legend.style.display = '';
+  bar.style.background = 'var(--spectrum)';
+
+  if (S.coloring === 'anomaly') {
+    const yearLabel = S.granularity === 'yearly' ? '' : ` · ${S.selectedYear}`;
+    unit.textContent = fillTemplate(t('legend_anomaly_vs'), { start: S.baselineStart, end: S.baselineEnd, year: yearLabel });
+
+    if (anomDomain) {
+      // Sub-annual: symmetricAnomDomain() guarantees aMax === -aMin, so the
+      // legend is always balanced around the 0° baseline at its centre.
+      const [aMin, aMax] = anomDomain;
+      const fmt = v => (v > 0 ? '+' : '') + v.toFixed(1) + '°';
+      ticks.innerHTML = `<span>${fmt(aMin)}</span><span>${t('legend_baseline_zero')}</span><span>${fmt(aMax)}</span>`;
+    } else {
+      // Yearly: classic ±3σ fixed scale
+      const std = stats[0]?.std || 1;
+      ticks.innerHTML = `<span>−${(std*3).toFixed(1)}°</span><span>0°</span><span>+${(std*3).toFixed(1)}°</span>`;
+    }
+  } else if (S.variable === 'max') {
+    // Fixed split palette: white (0°C) -> dark red (40°C)
+    bar.style.background = 'var(--spectrum-warm)';
+    unit.textContent = t('legend_abs_max');
+    ticks.innerHTML = `<span>0°</span><span>20°</span><span>40°</span>`;
+  } else if (S.variable === 'min') {
+    // Fixed split palette: dark blue (-20°C) -> white (0°C)
+    bar.style.background = 'var(--spectrum-cool)';
+    unit.textContent = t('legend_abs_min');
+    ticks.innerHTML = `<span>−20°</span><span>−10°</span><span>0°</span>`;
+  } else if (S.variable === 'mean') {
+    unit.textContent = t('legend_abs_mean');
+    ticks.innerHTML = `<span>5°</span><span>15°</span><span>25°</span>`;
+  }
+}
+
+// ─── Tooltip ────────────────────────────────────────────────────────────────
+let _ttData = [], _ttX0 = 0, _ttW = window.innerWidth;
+function updateTooltipData(stats, x0, w) {
+  _ttData = stats || []; _ttX0 = x0; _ttW = w;
+}
+
+function formatDate(k, gran) {
+  if (gran === 'yearly') return k;
+  const locale = t('locale');
+  if (gran === 'monthly') {
+    const [y,m] = k.split('-');
+    const mn = t('month_abbr');
+    return `${mn[+m-1]} ${y}`;
+  }
+  if (gran === 'weekly') {
+    const [y, w] = k.split('-W').map(Number);
+    // ISO week Monday: Jan 4 is always in week 1; walk to that week's Monday, then add (w-1) weeks
+    const jan4 = new Date(Date.UTC(y, 0, 4));
+    const isoMondayOfWeek1 = new Date(jan4);
+    isoMondayOfWeek1.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() + 6) % 7));
+    const monday = new Date(isoMondayOfWeek1);
+    monday.setUTCDate(isoMondayOfWeek1.getUTCDate() + (w - 1) * 7);
+    const dateStr = monday.toLocaleDateString(locale, {day:'numeric', month:'short', year:'numeric'});
+    return fillTemplate(t('date_week_of'), { date: dateStr, wk: String(w).padStart(2,'0') });
+  }
+  return new Date(k+'T12:00:00Z').toLocaleDateString(locale,{day:'numeric',month:'short',year:'numeric'});
+}
+
+function hideHoverUI() {
+  document.getElementById('tooltip').style.display = 'none';
+  document.getElementById('hover-line').style.display = 'none';
+}
+
+function showHoverTooltip(e, { title, date, rows }) {
+  const tip  = document.getElementById('tooltip');
+  const line = document.getElementById('hover-line');
+  line.style.left = e.clientX + 'px';
+  line.style.display = 'block';
+  const TIP_GAP = 20, TIP_MAX_H = 150;
+  tip.style.display = 'block';
+  const tx = Math.min(e.clientX + 14, window.innerWidth - 180);
+  let ty = e.clientY + TIP_GAP;
+  if (ty + TIP_MAX_H > window.innerHeight - 10) {
+    ty = e.clientY - TIP_MAX_H - TIP_GAP;
+  }
+  ty = Math.max(10, ty);
+  tip.style.left = tx + 'px';
+  tip.style.top = ty + 'px';
+  tip.innerHTML = `
+    <div class="tooltip__title">${title}</div>
+    <div class="tooltip__date">${date}</div>
+    <div class="tooltip__rows">${rows}</div>`;
+}
+
+function showBarChartTooltip(e, barEl) {
+  const svg = barEl.closest('.barchart-svg');
+  const cityName = svg?.dataset?.city || '';
+  const periodKey = barEl.dataset.key || '';
+  const v = parseFloat(barEl.dataset.v);
+  const anom = parseFloat(barEl.dataset.anom);
+  const anomSign = barEl.dataset.anomSign || (anom >= 0 ? '+' : '');
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const rows = `
+      <div class="tooltip__row is-strong">
+        <span>${varLabel}</span><span class="tooltip__value">${Number.isFinite(v) ? v.toFixed(1) : 'n/a'}°</span>
+      </div>
+      ${S.coloring === 'anomaly' ? `<div class="tooltip__row">
+        <span>${t('tooltip_anomaly')}</span><span class="tooltip__value">${Number.isFinite(anom) ? anomSign + anom.toFixed(2) : 'n/a'}°</span>
+      </div>
+      <div class="tooltip__row">
+        <span>${t('tooltip_baseline')}</span><span class="tooltip__value">${S.baselineStart}–${S.baselineEnd}</span>
+      </div>` : ''}`;
+  showHoverTooltip(e, {
+    title: cityName || formatDate(periodKey, S.granularity),
+    date: cityName ? formatDate(periodKey, S.granularity) : periodKey,
+    rows,
+  });
+}
+
+canvas.addEventListener('mousemove', e => {
+  if (S.chartView === 'bar') return;
+  const rect = canvas.getBoundingClientRect();
+
+  // In compare mode pick the band (top or bottom) by mouse Y
+  let activeData = _ttData, activeX0 = _ttX0, activeW = _ttW;
+  if (_compareLayout) {
+    const mouseY = e.clientY - rect.top;
+    const band = _compareLayout.find(b => mouseY >= b.y0 && mouseY <= b.y0 + b.h);
+    if (!band || !band.stats.length) { hideHoverUI(); return; }
+    activeData = band.stats; activeX0 = 0; activeW = rect.width;
+  }
+
+  if (!activeData.length) { hideHoverUI(); return; }
+  const frac = Math.max(0, Math.min(1, (e.clientX - activeX0) / activeW));
+  const i = Math.min(activeData.length-1, Math.floor(frac * activeData.length));
+  const p = activeData[i];
+  if (!p) { hideHoverUI(); return; }
+  const anomSign = p.anom >= 0 ? '+' : '';
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+
+  showHoverTooltip(e, {
+    title: activeData[i].k.slice(0, 4),
+    date: formatDate(p.k, S.granularity),
+    rows: `
+      <div class="tooltip__row is-strong">
+        <span>${varLabel}</span><span class="tooltip__value">${p.v.toFixed(1)}°</span>
+      </div>
+      ${S.coloring === 'anomaly' ? `<div class="tooltip__row">
+        <span>${t('tooltip_anomaly')}</span><span class="tooltip__value">${anomSign}${p.anom.toFixed(2)}°</span>
+      </div>` : ''}`,
+  });
+});
+canvas.addEventListener('mouseleave', hideHoverUI);
+
+document.getElementById('barchart-prev').addEventListener('click', () => {
+  if (S.chartView !== 'bar' || S.mode === 'compare') return;
+  if (S.barIndex > 0) {
+    S.barIndex--;
+    renderBarCharts();
+  }
+});
+document.getElementById('barchart-next').addEventListener('click', () => {
+  if (S.chartView !== 'bar' || S.mode === 'compare') return;
+  const n = getBarChartCities().length;
+  if (S.barIndex < n - 1) {
+    S.barIndex++;
+    renderBarCharts();
+  }
+});
+
+document.getElementById('barchart-grid').addEventListener('mousemove', e => {
+  if (S.chartView !== 'bar') return;
+  const bar = e.target.closest('.barchart-bar-hit');
+  if (!bar) { hideHoverUI(); return; }
+  showBarChartTooltip(e, bar);
+});
+document.getElementById('barchart-grid').addEventListener('mouseleave', hideHoverUI);
+document.getElementById('barchart-overlay').addEventListener('mouseleave', hideHoverUI);
+
+// ─── City search UI ────────────────────────────────────────────────────────
+let searchTimer = null;
+const cityInput = document.getElementById('city-input');
+const dropdown = document.getElementById('city-dropdown');
+
+cityInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  const q = cityInput.value.trim();
+  if (q.length < 2) { dropdown.hidden = true; return; }
+  searchTimer = setTimeout(async () => {
+    try {
+      const results = await searchCities(q);
+      renderDropdown(results);
+    } catch(e) { dropdown.hidden = true; }
+  }, 280);
+});
+
+cityInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { dropdown.hidden = true; cityInput.blur(); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); focusDropdown(0); }
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.city-search')) dropdown.hidden = true;
+});
+
+function renderDropdown(results) {
+  if (!results.length) {
+    dropdown.innerHTML = `<li class="city-search__empty">${t('dropdown_no_cities')}</li>`;
+  } else {
+    dropdown.innerHTML = results.map((r,i) => `
+      <li class="city-search__item" data-idx="${i}" tabindex="0">
+        <span class="city-search__name">${r.name}</span>
+        <span class="city-search__meta">${[r.admin1, r.country].filter(Boolean).join(', ')}</span>
+      </li>`).join('');
+    dropdown.querySelectorAll('.city-search__item').forEach((el,i) => {
+      el.addEventListener('click', () => addCity(results[i]));
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter') addCity(results[i]);
+        if (e.key === 'ArrowDown') focusDropdown(i+1);
+        if (e.key === 'ArrowUp') i > 0 ? focusDropdown(i-1) : cityInput.focus();
+        if (e.key === 'Escape') { dropdown.hidden = true; cityInput.focus(); }
+      });
+    });
+  }
+  dropdown.hidden = false;
+}
+
+function focusDropdown(i) {
+  const items = dropdown.querySelectorAll('.city-search__item');
+  if (items[i]) items[i].focus();
+}
+
+async function addCity(r) {
+  dropdown.hidden = true;
+  cityInput.value = '';
+  const id = `${r.latitude.toFixed(4)},${r.longitude.toFixed(4)}`;
+  if (S.cities.find(c => c.id === id)) return;
+
+  // Check for local ERA5 parquet (Italian stations only)
+  const era5Match = await checkLocalEra5(r.latitude, r.longitude);
+
+  const city = { id, name: r.name, country: r.country,
+                 lat: r.latitude, lon: r.longitude,
+                 label: `${r.name}, ${r.country || ''}`.toUpperCase().trim(),
+                 status: 'loading',
+                 era5StationId: era5Match?.id || null,
+                 source: era5Match ? 'era5_local' : 'openmeteo' };
+  S.cities.push(city);
+  if (!S.collageCityId) S.collageCityId = id;
+  renderCityList();
+  hideCover();
+  try {
+    await fetchRaw(city);
+    city.status = 'ready';
+    city.error  = null;
+  } catch(e) {
+    city.status = 'error';
+    city.error  = e.message || t('unknown_error');
+  }
+  renderCityList();
+  renderCompareSelects();
+  invalidateSeriesCache(city.id);
+  drawScene();
+  updatePresentTitle();
+}
+
+function removeCity(id) {
+  S.cities = S.cities.filter(c => c.id !== id);
+  for (const k of rawCache.keys()) if (k.startsWith(id + ':')) rawCache.delete(k);
+  if (S.collageCityId === id) S.collageCityId = S.cities[0]?.id || null;
+  renderCityList();
+  renderCompareSelects();
+  drawScene();
+  updatePresentTitle();
+}
+
+function renderCityList() {
+  const ul = document.getElementById('city-list');
+  ul.innerHTML = S.cities.map((c, idx) => `
+    <li class="city-list__item" draggable="true" data-idx="${idx}">
+      <span class="city-list__grip" title="${t('drag_to_reorder')}">&#8942;</span>
+      <span class="status-dot status-dot--${c.status}"></span>
+      <span class="city-list__name">${c.label}</span>
+      ${c.source==='era5_local'?`<span class="src-tag" title="${t('era5_local_title')}">ERA5</span>`:''}
+      <button class="icon-btn" onclick="removeCity('${c.id}')" title="${t('remove_city')}">&#x2715;</button>
+    </li>`).join('');
+
+  let dragIdx = null;
+  ul.querySelectorAll('.city-list__item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragIdx = parseInt(item.dataset.idx);
+      e.dataTransfer.effectAllowed = 'move';
+      requestAnimationFrame(() => item.classList.add('is-dragging'));
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('is-dragging');
+      ul.querySelectorAll('.city-list__item').forEach(el => el.classList.remove('drag-over'));
+      dragIdx = null;
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      ul.querySelectorAll('.city-list__item').forEach(el => el.classList.remove('drag-over'));
+      item.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const dropIdx = parseInt(item.dataset.idx);
+      if (dragIdx !== null && dragIdx !== dropIdx) {
+        const arr = [...S.cities];
+        const [moved] = arr.splice(dragIdx, 1);
+        arr.splice(dropIdx, 0, moved);
+        S.cities = arr;
+        renderCityList();
+        renderCompareSelects();
+        drawScene();
+      }
+      dragIdx = null;
+    });
+  });
+  updateSrcBadge();
+}
+
+// ─── Data-source status badge ──────────────────────────────────────────────
+function updateSrcBadge() {
+  const dot   = document.getElementById('src-badge-dot');
+  const popup = document.getElementById('src-popup');
+  if (!dot || !popup) return;
+
+  if (!S.cities.length) {
+    dot.className = 'src-badge__dot';
+    popup.innerHTML = `<div class="src-popup__hd">${t('src_popup_title')}</div>`
+      + `<p style="font-size:10px;color:var(--text-faint);margin:0">${t('src_popup_none')}</p>`;
+    return;
+  }
+
+  const errors  = S.cities.filter(c => c.status === 'error');
+  const loading = S.cities.filter(c => c.status === 'loading');
+
+  if      (errors.length)  dot.className = 'src-badge__dot src-badge__dot--error';
+  else if (loading.length) dot.className = 'src-badge__dot src-badge__dot--loading';
+  else                     dot.className = 'src-badge__dot src-badge__dot--ready';
+
+  const rows = S.cities.map(c => {
+    const icon = c.status === 'ready' ? '✓' : c.status === 'loading' ? '…' : '✕';
+    const errHtml = c.error
+      ? `<div class="src-popup__err">${c.error}</div>`
+      : '';
+    const titleEl = `<strong>${c.name}</strong>`;
+    return `<div class="src-popup__city"><span>${icon}</span><div>${titleEl}${errHtml}</div></div>`;
+  }).join('');
+
+  let advice = '';
+  if (errors.length) {
+    const isRateLimit  = S.cities.some(c => c.error?.toLowerCase().includes('limit'));
+    const isCerraRange = S.model === 'cerra';
+    advice = '<div class="src-popup__advice">';
+    if (isRateLimit) {
+      advice += t('advice_ratelimit');
+    } else if (isCerraRange) {
+      advice += t('advice_cerra');
+    } else {
+      advice += t('advice_generic');
+    }
+    advice += `</div><button class="src-popup__retry" onclick="retryErrors()">${t('src_popup_retry')}</button>`;
+  }
+
+  popup.innerHTML = `<div class="src-popup__hd">${t('src_popup_title')}</div>` + rows + advice;
+}
+
+async function retryErrors() {
+  const failed = S.cities.filter(c => c.status === 'error');
+  for (const city of failed) {
+    for (const k of rawCache.keys()) if (k.startsWith(city.id + ':')) rawCache.delete(k);
+    city.status = 'loading';
+    city.error  = null;
+    renderCityList();
+    try {
+      await fetchRaw(city);
+      city.status = 'ready';
+    } catch(e) {
+      city.status = 'error';
+      city.error  = e.message || t('unknown_error');
+    }
+    renderCityList();
+  }
+  seriesCache.clear();
+  drawScene();
+}
+
+function renderCompareSelects() {
+  const opts = S.cities.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('diff-a-sel').innerHTML = opts;
+  document.getElementById('diff-b-sel').innerHTML = opts;
+  if (S.cities.length >= 2) {
+    document.getElementById('diff-b-sel').value = S.cities[1].id;
+  }
+}
+
+function invalidateSeriesCache(cityId) {
+  for (const k of seriesCache.keys()) if (k.startsWith(cityId+':')) seriesCache.delete(k);
+}
+
+// ─── Segmented controls ────────────────────────────────────────────────────
+function makeSeg(id, stateKey, onChange) {
+  const seg = document.getElementById(id);
+  seg.querySelectorAll('.seg__btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      seg.querySelectorAll('.seg__btn').forEach(b => b.classList.remove('is-on'));
+      btn.classList.add('is-on');
+      S[stateKey] = btn.dataset.val;
+      if (onChange) onChange(btn.dataset.val);
+    });
+  });
+}
+
+// ── Model hint ────────────────────────────────────────────────────────────
+function updateModelHint() {
+  const m = MODELS[S.model];
+  document.getElementById('model-hint').textContent = `${m.res} · ${t(m.noteKey)}`;
+}
+applyI18n();
+updateModelHint(); // initialise on load
+
+makeSeg('model-seg', 'model', async v => {
+  updateModelHint();
+  // Clamp range to model's valid window
+  const m = MODELS[v];
+  if (S.rangeStart < m.start) { S.rangeStart = m.start; document.getElementById('range-start').value = m.start; }
+  if (m.end && S.rangeEnd > m.end) { S.rangeEnd = m.end; document.getElementById('range-end').value = m.end; }
+  syncYearStepperButtons(document.getElementById('range-start'));
+  syncYearStepperButtons(document.getElementById('range-end'));
+  // Reset selected year to the most recent year the model supports, capped at 2025
+  const defaultYear = Math.min(m.end ?? new Date().getUTCFullYear(), 2025);
+  S.selectedYear = defaultYear;
+  const selEl = document.getElementById('selected-year');
+  selEl.value = defaultYear;
+  selEl.min   = m.start;
+  selEl.max   = m.end ?? 2025;
+  syncYearStepperButtons(selEl);
+  seriesCache.clear();
+  // Refetch all already-loaded cities under the new model
+  for (const city of S.cities) {
+    if (rawCache.has(rawCacheKey(city.id))) continue; // already cached for this model
+    city.status = 'loading'; renderCityList();
+    try { await fetchRaw(city); city.status = 'ready'; city.error = null; }
+    catch(e) { city.status = 'error'; city.error = e.message || t('unknown_error'); }
+    renderCityList();
+  }
+  drawScene();
+});
+
+makeSeg('mode-seg', 'mode', v => {
+  document.getElementById('compare-section').style.display = v==='compare' ? '' : 'none';
+  if (S.chartView === 'bar') S.barIndex = 0;
+  drawScene();
+});
+makeSeg('gran-seg', 'granularity', () => {
+  const isYearly = S.granularity === 'yearly';
+  document.getElementById('range-multi').style.display  = isYearly ? '' : 'none';
+  document.getElementById('range-single').style.display = isYearly ? 'none' : '';
+  clearSeriesCache();
+  drawScene();
+});
+makeSeg('var-seg', 'variable', () => { clearSeriesCache(); drawScene(); });
+makeSeg('color-seg', 'coloring', v => {
+  document.getElementById('baseline-section').style.display = v==='anomaly' ? '' : 'none';
+  drawScene();
+});
+makeSeg('scale-seg', 'sharedScale', v => { S.sharedScale = v==='shared'; drawScene(); });
+makeSeg('chartview-seg', 'chartView', () => drawScene());
+
+function clearSeriesCache() { seriesCache.clear(); }
+
+// Year inputs
+function yearInputBounds(input) {
+  let min = parseInt(input.min, 10);
+  let max = parseInt(input.max, 10);
+  if (input.id === 'range-start') max = Math.min(max, S.rangeEnd - 1);
+  else if (input.id === 'range-end') min = Math.max(min, S.rangeStart + 1);
+  return [min, max];
+}
+
+function syncYearStepperButtons(input) {
+  const stepper = input.closest('.year-stepper');
+  if (!stepper) return;
+  const [min, max] = yearInputBounds(input);
+  const v = parseInt(input.value, 10);
+  for (const btn of stepper.querySelectorAll('.year-stepper__btn')) {
+    btn.disabled = btn.dataset.dir === 'up' ? v >= max : v <= min;
+  }
+}
+
+function applyYearValue(input, key, rawValue) {
+  const [min, max] = yearInputBounds(input);
+  let v = parseInt(rawValue, 10);
+  if (!Number.isFinite(v)) v = S[key];
+  v = Math.max(min, Math.min(max, v));
+  S[key] = v;
+  input.value = v;
+  if (input.id === 'range-start' || input.id === 'range-end') {
+    syncYearStepperButtons(document.getElementById('range-start'));
+    syncYearStepperButtons(document.getElementById('range-end'));
+  } else {
+    syncYearStepperButtons(input);
+  }
+  clearSeriesCache();
+  drawScene();
+}
+
+function bindYear(id, key) {
+  const input = document.getElementById(id);
+  input.addEventListener('change', e => applyYearValue(input, key, e.target.value));
+  const stepper = input.closest('.year-stepper');
+  if (!stepper) return;
+  for (const btn of stepper.querySelectorAll('.year-stepper__btn')) {
+    btn.addEventListener('click', () => {
+      const delta = btn.dataset.dir === 'up' ? 1 : -1;
+      applyYearValue(input, key, S[key] + delta);
+    });
+  }
+  syncYearStepperButtons(input);
+}
+bindYear('baseline-start', 'baselineStart');
+bindYear('baseline-end',   'baselineEnd');
+bindYear('range-start',    'rangeStart');
+bindYear('range-end',      'rangeEnd');
+bindYear('selected-year', 'selectedYear');
+
+document.getElementById('diff-a-sel').addEventListener('change', e => { S.compareA = e.target.value; drawScene(); });
+document.getElementById('diff-b-sel').addEventListener('change', e => { S.compareB = e.target.value; drawScene(); });
+
+// ─── Theme ─────────────────────────────────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('theme-dark').classList.toggle('is-on', t==='dark');
+  document.getElementById('theme-paper').classList.toggle('is-on', t==='paper');
+  drawScene();
+}
+window.setTheme = setTheme;
+
+// ─── Panel toggle ──────────────────────────────────────────────────────────
+function togglePanel() {
+  S.panelVisible = !S.panelVisible;
+  document.getElementById('main-panel').classList.toggle('hidden', !S.panelVisible);
+  document.getElementById('show-hint').classList.toggle('visible', !S.panelVisible);
+  updatePresentTitle();
+  if (S.chartView === 'bar') layoutBarchartOverlay();
+}
+window.togglePanel = togglePanel;
+
+function updatePresentTitle() {
+  const el = document.getElementById('present-title');
+  const nm = document.getElementById('present-title-name');
+  if (!S.panelVisible && S.cities.length) {
+    nm.textContent = S.cities[0].name;
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ─── Cover ─────────────────────────────────────────────────────────────────
+function hideCover() {
+  document.getElementById('cover').classList.add('hidden');
+}
+document.getElementById('cover').addEventListener('click', e => {
+  if (e.target.classList.contains('cover__city')) return;
+  // clicking bg = close
+});
+
+// Preset cities for cover
+const PRESETS = [
+  {name:'Bologna',   country:'Italy',    lat:44.4938, lon:11.3426},
+  {name:'Cairo',     country:'Egypt',    lat:30.0626, lon:31.2497},
+  {name:'London',    country:'UK',       lat:51.5085, lon:-0.1257},
+  {name:'New York',  country:'USA',      lat:40.7128, lon:-74.006},
+  {name:'Paris',     country:'France',   lat:48.8566, lon:2.3522},
+  {name:'Sydney',    country:'Australia',lat:-33.8688,lon:151.2093},
+  {name:'Tokyo',     country:'Japan',    lat:35.6762, lon:139.6503},
+];
+const coverCities = document.getElementById('cover-cities');
+PRESETS.forEach((p,i) => {
+  if (i > 0) { const dot = document.createElement('span'); dot.className='cover__dot'; dot.textContent='·'; coverCities.appendChild(dot); }
+  const btn = document.createElement('button');
+  btn.className = 'cover__city';
+  btn.textContent = p.name;
+  btn.onclick = () => {
+    const r = {latitude:p.lat, longitude:p.lon, name:p.name, country:p.country, admin1:''};
+    addCity(r);
+  };
+  coverCities.appendChild(btn);
+});
+
+// ─── Export PNG / GIF ──────────────────────────────────────────────────────
+function cssVar(name, fallback = '#888') {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+const SPECTRUM_STOPS = ['#053061','#2166ac','#4393c3','#92c5de','#d1e5f0','#f7f7f7','#fddbc7','#f4a582','#d6604d','#b2182b','#67001f'];
+const EXPORT_FONT_SERIF = '"Playfair Display", Georgia, serif';
+const EXPORT_FONT_SANS = '"Inter", system-ui, sans-serif';
+
+// Make sure the app's web fonts are actually loaded before drawing export
+// frames — otherwise the first canvas export silently falls back to the
+// default serif/sans until Google Fonts finish loading.
+async function ensureExportFonts() {
+  try {
+    await Promise.all([
+      document.fonts.load('800 54px "Playfair Display"'),
+      document.fonts.load('800 19px "Playfair Display"'),
+      document.fonts.load('700 13px "Playfair Display"'),
+      document.fonts.load('600 11px Inter'),
+      document.fonts.load('500 11px Inter'),
+      document.fonts.ready,
+    ]);
+  } catch (_) { /* font loading is best-effort */ }
+}
+
+function triggerDownload(dataUrl, filename) {
+  const link = document.createElement('a');
+  const hasExt = /\.(png|gif)$/i.test(filename);
+  link.download = hasExt ? filename : `${filename}.png`;
+  link.href = dataUrl;
+  link.click();
+}
+
+function triggerDownloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = url;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function exportCityName(scene) {
+  if (scene?.mode === 'single' || scene?.mode === 'collage') return scene.city?.name || '';
+  if (scene?.mode === 'compare') return scene.cities?.[0]?.name || '';
+  return S.cities[0]?.name || '';
+}
+
+function drawSpectrumRule(ctx, x, y, w, h) {
+  const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+  SPECTRUM_STOPS.forEach((c, i) => grad.addColorStop(i / (SPECTRUM_STOPS.length - 1), c));
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
+}
+
+// Shared geometry + colours for the exported bottom-left title block.
+// Mirrors the on-screen #present-title (.present-title__kicker/__name/__rule),
+// with theme-aware ink so the block reads on both dark and paper exports.
+function presentTitleLayout(W, H) {
+  const isPaper = document.documentElement.getAttribute('data-theme') === 'paper';
+  const nameSize = Math.min(54, Math.max(28, W * 0.04));
+  const left = 36, bottom = 36;
+  const ruleW = 180, ruleH = 3;
+  const gapKicker = 7, gapName = 12;
+  const ruleY = H - bottom - ruleH;
+  const nameY = ruleY - gapName;                      // name baseline
+  const kickerY = nameY - nameSize * 0.78 - gapKicker; // kicker baseline, above the name's cap height
+  return {
+    left, ruleW, ruleH, ruleY, nameY, kickerY, nameSize,
+    kickerSize: 10,
+    kickerColor: isPaper ? 'rgba(28,26,23,.75)' : 'rgba(236,230,216,.75)',
+    nameColor: isPaper ? '#1c1a17' : '#fff',
+  };
+}
+
+function drawPresentTitleOnCanvas(ctx, W, H, cityName) {
+  if (!cityName) return;
+  const L = presentTitleLayout(W, H);
+  const kicker = t('present_title_kicker').toUpperCase();
+
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  drawSpectrumRule(ctx, L.left, L.ruleY, L.ruleW, L.ruleH);
+
+  ctx.font = `800 ${L.nameSize}px ${EXPORT_FONT_SERIF}`;
+  ctx.fillStyle = L.nameColor;
+  ctx.fillText(cityName, L.left, L.nameY);
+
+  ctx.font = `600 ${L.kickerSize}px ${EXPORT_FONT_SANS}`;
+  ctx.fillStyle = L.kickerColor;
+  let x = L.left;
+  const spacing = 2.2;
+  for (const ch of kicker) {
+    ctx.fillText(ch, x, L.kickerY);
+    x += ctx.measureText(ch).width + (ch === ' ' ? 4 : spacing);
+  }
+  ctx.restore();
+}
+
+// SVG flavour of the same title block: <linearGradient> spectrum rule,
+// Playfair Display name, letter-spaced Inter kicker.
+function presentTitleSVG(W, H, cityName) {
+  if (!cityName) return '';
+  const L = presentTitleLayout(W, H);
+  const stops = SPECTRUM_STOPS.map((c, i) =>
+    `<stop offset="${(i / (SPECTRUM_STOPS.length - 1) * 100).toFixed(1)}%" stop-color="${c}"/>`).join('');
+  return `<defs><linearGradient id="spectrum-rule" x1="0" y1="0" x2="1" y2="0">${stops}</linearGradient></defs>`
+    + `<text x="${L.left}" y="${L.kickerY.toFixed(1)}" font-family='${EXPORT_FONT_SANS}' font-size="${L.kickerSize}" font-weight="600" letter-spacing="2.2" fill="${L.kickerColor}">${escapeHtml(t('present_title_kicker').toUpperCase())}</text>`
+    + `<text x="${L.left}" y="${L.nameY.toFixed(1)}" font-family='${EXPORT_FONT_SERIF}' font-size="${L.nameSize.toFixed(1)}" font-weight="800" fill="${L.nameColor}">${escapeHtml(cityName)}</text>`
+    + `<rect x="${L.left}" y="${L.ruleY.toFixed(1)}" width="${L.ruleW}" height="${L.ruleH}" fill="url(#spectrum-rule)"/>`;
+}
+
+function animationSteps(total, maxSteps = 150) {
+  if (total <= 0) return [];
+  if (total <= maxSteps) return Array.from({length: total}, (_, i) => i + 1);
+  const steps = new Set();
+  for (let s = 0; s < maxSteps; s++) {
+    steps.add(Math.max(1, Math.round((s / (maxSteps - 1)) * total)));
+  }
+  steps.add(total);
+  return [...steps].sort((a, b) => a - b);
+}
+
+let _gifenc;
+async function loadGifenc() {
+  if (!_gifenc) {
+    _gifenc = await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js');
+  }
+  return _gifenc;
+}
+
+async function encodeCanvasFrames(canvases, delayMs = 100, finalDelayMs = 2000) {
+  const { GIFEncoder, quantize, applyPalette } = await loadGifenc();
+  const gif = GIFEncoder();
+  for (let i = 0; i < canvases.length; i++) {
+    const c = canvases[i];
+    const ctx = c.getContext('2d');
+    const { width, height } = c;
+    const { data } = ctx.getImageData(0, 0, width, height);
+    const palette = quantize(data, 256);
+    const index = applyPalette(data, palette);
+    // Hold the final, fully-drawn frame longer before the loop restarts.
+    const delay = i === canvases.length - 1 ? finalDelayMs : delayMs;
+    gif.writeFrame(index, width, height, { palette, delay });
+  }
+  gif.finish();
+  return new Blob([gif.bytes()], { type: 'image/gif' });
+}
+
+function stripesAnimationStepCount(scene) {
+  if (!scene) return 0;
+  if (scene.mode === 'collage') return scene.yearSet?.length || 0;
+  if (scene.mode === 'compare') {
+    return Math.max(...scene.statsList.map(s => s.length), 0);
+  }
+  return scene.stats?.length || 0;
+}
+
+function stripesFrameOpts(scene, step) {
+  if (!scene) return {};
+  if (scene.mode === 'collage') return { collageCols: step };
+  return { stripeLimit: step };
+}
+
+function renderStripesExportFrame(W, H, scene, step) {
+  const off = document.createElement('canvas');
+  off.width = W;
+  off.height = H;
+  const octx = off.getContext('2d');
+  octx.fillStyle = cssVar('--bg', '#0b0b0c');
+  octx.fillRect(0, 0, W, H);
+  const prev = _renderCtx;
+  _renderCtx = octx;
+  drawStripesContent(W, H, stripesFrameOpts(scene, step));
+  drawPresentTitleOnCanvas(octx, W, H, exportCityName(scene));
+  _renderCtx = prev;
+  return off;
+}
+
+function inlineSvgVars(svgMarkup) {
+  const vars = {
+    'var(--barchart-label)': cssVar('--barchart-label'),
+    'var(--barchart-label-zero)': cssVar('--barchart-label-zero'),
+    'var(--rule-soft)': cssVar('--rule-soft'),
+    'var(--rule)': cssVar('--rule'),
+  };
+  let s = svgMarkup;
+  for (const [token, value] of Object.entries(vars)) s = s.split(token).join(value);
+  if (!/xmlns=/.test(s)) s = s.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+  // On screen the chart text inherits Inter from <body>; a standalone SVG has
+  // no such inheritance, so pin the same family (with fallbacks) on the root.
+  if (!/font-family=/.test(s.slice(0, s.indexOf('>')))) {
+    s = s.replace('<svg ', `<svg font-family='${EXPORT_FONT_SANS}' `);
+  }
+  return s;
+}
+
+function loadSvgToCanvas(svgMarkup, width, height) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(new Blob([inlineSvgVars(svgMarkup)], { type: 'image/svg+xml;charset=utf-8' }));
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = width;
+      c.height = height;
+      c.getContext('2d').drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
+    img.src = url;
+  });
+}
+
+function roundRectFillStroke(targetCtx, x, y, w, h, r) {
+  targetCtx.beginPath();
+  targetCtx.moveTo(x + r, y);
+  targetCtx.arcTo(x + w, y, x + w, y + h, r);
+  targetCtx.arcTo(x + w, y + h, x, y + h, r);
+  targetCtx.arcTo(x, y + h, x, y, r);
+  targetCtx.arcTo(x, y, x + w, y, r);
+  targetCtx.closePath();
+  targetCtx.fill();
+  targetCtx.stroke();
+}
+
+function exportBaseName() {
+  const city = S.cities[0]?.name || 'export';
+  return `warming-stripes-${city.replace(/[^\w\-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'export'}`;
+}
+
+function exportStripesPNG() {
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.max(window.innerWidth, 200);
+  const H = Math.max(window.innerHeight, 200);
+  const off = document.createElement('canvas');
+  off.width = W * dpr;
+  off.height = H * dpr;
+  const octx = off.getContext('2d');
+  octx.scale(dpr, dpr);
+  octx.fillStyle = cssVar('--bg', '#0b0b0c');
+  octx.fillRect(0, 0, W, H);
+
+  const prev = _renderCtx;
+  _renderCtx = octx;
+  const scene = drawStripesContent(W, H);
+  if (scene) drawPresentTitleOnCanvas(octx, W, H, exportCityName(scene));
+  _renderCtx = prev;
+
+  if (!scene) return;
+  triggerDownload(off.toDataURL('image/png'), `${exportBaseName()}.png`);
+}
+
+async function exportStripesGIF() {
+  const W = Math.max(window.innerWidth, 200);
+  const H = Math.max(window.innerHeight, 200);
+  const probe = document.createElement('canvas');
+  probe.width = W;
+  probe.height = H;
+  const probeCtx = probe.getContext('2d');
+  const prev = _renderCtx;
+  _renderCtx = probeCtx;
+  probeCtx.fillStyle = cssVar('--bg', '#0b0b0c');
+  probeCtx.fillRect(0, 0, W, H);
+  const previewScene = drawStripesContent(W, H);
+  _renderCtx = prev;
+  if (!previewScene) return;
+
+  const total = stripesAnimationStepCount(previewScene);
+  const steps = animationSteps(total);
+  if (!steps.length) return;
+
+  const frames = steps.map(step => renderStripesExportFrame(W, H, previewScene, step));
+  try {
+    const blob = await encodeCanvasFrames(frames, 100);
+    triggerDownloadBlob(blob, `${exportBaseName()}.gif`);
+  } catch (err) {
+    console.error('GIF export failed', err);
+  }
+}
+
+// ─── SVG export ────────────────────────────────────────────────────────────
+// One <rect> per stripe using the exact same colour mapping as the canvas
+// renderer (colorFn), plus the same decade/year tick labels.
+function stripesBandSVG(stats, x0, y0, w, h, dMin, dMax, anomDomain) {
+  let out = '';
+  const n = stats.length;
+  if (!n) return out;
+  const sw = w / n;
+  for (let i = 0; i < n; i++) {
+    const c = colorFn(stats[i], S.coloring, dMin, dMax, anomDomain);
+    const x = x0 + Math.floor(i * sw);
+    const rw = Math.ceil((i + 1) * sw) - Math.floor(i * sw);
+    out += `<rect x="${x}" y="${y0}" width="${rw}" height="${h}" fill="rgb(${c[0]},${c[1]},${c[2]})"/>`;
+  }
+  if (S.granularity === 'yearly') {
+    const fs = Math.max(9, Math.min(11, w / 80));
+    for (let i = 0; i < n; i++) {
+      const yr = parseInt(stats[i].k);
+      if (yr % 10 === 0) {
+        const cx = x0 + (i + 0.5) * sw;
+        out += `<rect x="${(cx - .5).toFixed(1)}" y="${y0}" width="1" height="${h}" fill="rgba(0,0,0,.25)"/>`;
+        out += `<text x="${cx.toFixed(1)}" y="${y0 + h - 6}" text-anchor="middle" font-weight="500" font-size="${fs.toFixed(1)}" fill="rgba(255,255,255,.72)">${yr}</text>`;
+      }
+    }
+  }
+  if (S.granularity === 'monthly') {
+    for (let i = 0; i < n; i++) {
+      if (String(stats[i].k).endsWith('-01')) {
+        const yr = parseInt(stats[i].k);
+        if (yr % 5 === 0) {
+          const cx = x0 + (i + 0.5) * sw;
+          out += `<text x="${cx.toFixed(1)}" y="${y0 + h - 6}" text-anchor="middle" font-weight="500" font-size="9" fill="rgba(255,255,255,.65)">${yr}</text>`;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// SVG twin of drawCityBadge() (compare-mode corner label).
+function cityBadgeSVG(name, W, bandY0) {
+  if (!name) return '';
+  const isPaper = document.documentElement.getAttribute('data-theme') === 'paper';
+  const bg = isPaper ? 'rgba(246,243,236,.92)' : 'rgba(11,11,12,.78)';
+  const textColor = isPaper ? '#1c1a17' : '#ece6d8';
+  const label = name.toUpperCase();
+  const padX = 10, padY = 6, marginTop = 10, marginRight = 12;
+  ctx.save();
+  ctx.font = '600 11px Inter,sans-serif';
+  const textW = ctx.measureText(label).width;
+  ctx.restore();
+  const boxW = textW + padX * 2;
+  const boxH = 13 + padY * 2;
+  const x = W - boxW - marginRight;
+  const y = bandY0 + marginTop;
+  return `<rect x="${x.toFixed(1)}" y="${y}" width="${boxW.toFixed(1)}" height="${boxH}" rx="3" fill="${bg}"/>`
+    + `<text x="${(x + padX).toFixed(1)}" y="${(y + boxH / 2 + 1).toFixed(1)}" dominant-baseline="middle" font-weight="600" font-size="11" fill="${textColor}">${escapeHtml(label)}</text>`;
+}
+
+function exportStripesSVG() {
+  const W = Math.max(window.innerWidth, 200);
+  const H = Math.max(window.innerHeight, 200);
+  const ready = S.cities.filter(c => rawCache.has(rawCacheKey(c.id)));
+  if (!ready.length) return;
+
+  let body = `<rect x="0" y="0" width="${W}" height="${H}" fill="${cssVar('--bg', '#0b0b0c')}"/>`;
+  let cityName = '';
+
+  if (S.mode === 'compare') {
+    const cities = ready.slice(0, 4);
+    const statsList = cities.map(c => getSeriesForCity(c)).filter(Boolean);
+    if (!statsList.length) return;
+    const [dMin, dMax] = S.sharedScale ? getDomain(statsList) : [0, 0];
+    const sharedAnomDomain = (S.coloring === 'anomaly' && S.sharedScale)
+      ? combinedSymmetricAnomDomain(statsList) : null;
+    const n = statsList.length;
+    const bandH = Math.floor(H / n);
+    statsList.forEach((stats, i) => {
+      const [mn, mx] = S.sharedScale ? [dMin, dMax] : getDomain([stats]);
+      const anomDomain = S.coloring === 'anomaly'
+        ? (sharedAnomDomain || symmetricAnomDomain(stats)) : null;
+      const y0 = i * bandH;
+      const bh = (i === n - 1) ? (H - y0) : bandH;
+      body += stripesBandSVG(stats, 0, y0, W, bh, mn, mx, anomDomain);
+      body += cityBadgeSVG(cities[i]?.name || '', W, y0);
+      if (i < n - 1) body += `<rect x="0" y="${y0 + bh - 2}" width="${W}" height="4" fill="rgba(255,255,255,.9)"/>`;
+    });
+    cityName = cities[0]?.name || '';
+  } else {
+    const city = ready[0];
+    const stats = getSeriesForCity(city);
+    if (!stats?.length) return;
+    const [dMin, dMax] = getDomain([stats]);
+    const anomDomain = (S.coloring === 'anomaly') ? symmetricAnomDomain(stats) : null;
+    body += stripesBandSVG(stats, 0, 0, W, H, dMin, dMax, anomDomain);
+    cityName = city.name;
+  }
+
+  body += presentTitleSVG(W, H, cityName);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family='${EXPORT_FONT_SANS}'>${body}</svg>`;
+  triggerDownloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${exportBaseName()}.svg`);
+}
+
+// Bar-chart SVG export: same composition as the PNG export (panel card,
+// serif title, sans subtitle), with the rendered chart SVG nested inside
+// and every CSS variable inlined to its resolved theme colour.
+function exportBarChartsSVG() {
+  const perCity = getBarChartCities();
+  if (!perCity.length) return;
+
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const isCompare = S.mode === 'compare';
+  const citiesToExport = isCompare
+    ? perCity.slice(0, 4)
+    : [perCity[Math.min(Math.max(S.barIndex, 0), perCity.length - 1)]];
+
+  const allStats = isCompare ? citiesToExport.map(d => d.stats) : null;
+  const sharedY = allStats?.length ? getBarChartYDomain(allStats) : null;
+  const sharedColor = allStats?.length ? getBarChartColorContext(allStats, allStats[0]) : null;
+
+  const PANEL_W = 660, PAD = 12, HEADER = 48;
+  const CHART_W = PANEL_W - PAD * 2;
+  const CHART_H = Math.round(CHART_W * 580 / 780);
+  const PANEL_H = HEADER + CHART_H + PAD;
+  const GAP = 10, MARGIN = 24;
+  const cols = citiesToExport.length;
+  const exportW = MARGIN * 2 + cols * PANEL_W + Math.max(0, cols - 1) * GAP;
+  const exportH = MARGIN * 2 + PANEL_H;
+
+  let body = `<rect x="0" y="0" width="${exportW}" height="${exportH}" fill="${cssVar('--bg', '#0b0b0c')}"/>`;
+
+  for (let i = 0; i < citiesToExport.length; i++) {
+    const { city, stats } = citiesToExport[i];
+    const scales = (isCompare && S.sharedScale && sharedY)
+      ? { yDomain: sharedY, ...sharedColor }
+      : { yDomain: getBarChartYDomain([stats]), ...getBarChartColorContext([stats], stats) };
+
+    const tmp = document.createElement('div');
+    tmp.innerHTML = buildBarChartSVG(city, stats, scales, varLabel);
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.barchart-panel__title').textContent;
+    const subtitle = panel.querySelector('.barchart-panel__subtitle').textContent;
+    let inner = inlineSvgVars(new XMLSerializer().serializeToString(panel.querySelector('svg')));
+
+    const px = MARGIN + i * (PANEL_W + GAP);
+    const py = MARGIN;
+
+    // Re-position the chart inside the export document.
+    inner = inner.replace(/^<svg[^>]*>/,
+      `<svg x="${px + PAD}" y="${py + HEADER}" width="${CHART_W}" height="${CHART_H}" viewBox="0 0 780 580" preserveAspectRatio="xMidYMid meet" font-family='${EXPORT_FONT_SANS}'>`);
+
+    body += `<rect x="${px}" y="${py}" width="${PANEL_W}" height="${PANEL_H}" rx="3" fill="${cssVar('--panel-bg', 'rgba(14,14,15,.9)')}" stroke="${cssVar('--rule', 'rgba(236,230,216,.16)')}" stroke-width="1"/>`;
+    body += `<text x="${px + PAD}" y="${py + 22}" font-family='${EXPORT_FONT_SERIF}' font-weight="800" font-size="19" fill="${cssVar('--ink', '#ece6d8')}">${escapeHtml(title)}</text>`;
+    body += `<text x="${px + PAD}" y="${py + 38}" font-weight="500" font-size="10.5" fill="${cssVar('--text-dim', 'rgba(236,230,216,.6)')}">${escapeHtml(subtitle)}</text>`;
+    body += inner;
+  }
+
+  const titleCity = citiesToExport[0]?.city?.name || S.cities[0]?.name || '';
+  body += presentTitleSVG(exportW, exportH, titleCity);
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${exportW}" height="${exportH}" viewBox="0 0 ${exportW} ${exportH}" font-family='${EXPORT_FONT_SANS}'>${body}</svg>`;
+  triggerDownloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${exportBaseName()}.svg`);
+}
+
+async function exportBarChartsPNG() {
+  const perCity = getBarChartCities();
+  if (!perCity.length) return;
+
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const isCompare = S.mode === 'compare';
+  const citiesToExport = isCompare
+    ? perCity.slice(0, 4)
+    : [perCity[Math.min(Math.max(S.barIndex, 0), perCity.length - 1)]];
+
+  const allStats = isCompare ? citiesToExport.map(d => d.stats) : null;
+  const sharedY = allStats?.length ? getBarChartYDomain(allStats) : null;
+  const sharedColor = allStats?.length ? getBarChartColorContext(allStats, allStats[0]) : null;
+
+  const PANEL_W = 660;
+  const PAD = 12;
+  const HEADER = 48;
+  const CHART_W = PANEL_W - PAD * 2;
+  const CHART_H = Math.round(CHART_W * 580 / 780);
+  const PANEL_H = HEADER + CHART_H + PAD;
+  const GAP = 10;
+  const MARGIN = 24;
+  const cols = citiesToExport.length;
+  const exportW = MARGIN * 2 + cols * PANEL_W + Math.max(0, cols - 1) * GAP;
+  const exportH = MARGIN * 2 + PANEL_H;
+  const dpr = 2;
+
+  const c = document.createElement('canvas');
+  c.width = exportW * dpr;
+  c.height = exportH * dpr;
+  const x = c.getContext('2d');
+  x.scale(dpr, dpr);
+  x.fillStyle = cssVar('--bg', '#0b0b0c');
+  x.fillRect(0, 0, exportW, exportH);
+
+  for (let i = 0; i < citiesToExport.length; i++) {
+    const { city, stats } = citiesToExport[i];
+    const scales = (isCompare && S.sharedScale && sharedY)
+      ? { yDomain: sharedY, ...sharedColor }
+      : { yDomain: getBarChartYDomain([stats]), ...getBarChartColorContext([stats], stats) };
+
+    const tmp = document.createElement('div');
+    tmp.innerHTML = buildBarChartSVG(city, stats, scales, varLabel);
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.barchart-panel__title').textContent;
+    const subtitle = panel.querySelector('.barchart-panel__subtitle').textContent;
+    const svgMarkup = new XMLSerializer().serializeToString(panel.querySelector('svg'));
+
+    const px = MARGIN + i * (PANEL_W + GAP);
+    const py = MARGIN;
+
+    x.fillStyle = cssVar('--panel-bg', 'rgba(14,14,15,.9)');
+    x.strokeStyle = cssVar('--rule', 'rgba(236,230,216,.16)');
+    x.lineWidth = 1;
+    roundRectFillStroke(x, px, py, PANEL_W, PANEL_H, 3);
+
+    x.fillStyle = cssVar('--ink', '#ece6d8');
+    x.font = '800 19px "Playfair Display", Georgia, serif';
+    x.fillText(title, px + PAD, py + 22);
+    x.fillStyle = cssVar('--text-dim', 'rgba(236,230,216,.6)');
+    x.font = '500 10.5px Inter, sans-serif';
+    x.fillText(subtitle, px + PAD, py + 38);
+
+    try {
+      const chartImg = await loadSvgToCanvas(svgMarkup, CHART_W, CHART_H);
+      x.drawImage(chartImg, px + PAD, py + HEADER, CHART_W, CHART_H);
+    } catch (err) {
+      console.error('Bar chart export failed', err);
+    }
+  }
+
+  const titleCity = citiesToExport[0]?.city?.name || S.cities[0]?.name || '';
+  drawPresentTitleOnCanvas(x, exportW, exportH, titleCity);
+
+  triggerDownload(c.toDataURL('image/png'), `${exportBaseName()}.png`);
+}
+
+async function exportBarChartsGIF() {
+  const perCity = getBarChartCities();
+  if (!perCity.length) return;
+
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const isCompare = S.mode === 'compare';
+  const citiesToExport = isCompare
+    ? perCity.slice(0, 4)
+    : [perCity[Math.min(Math.max(S.barIndex, 0), perCity.length - 1)]];
+  const { city, stats } = citiesToExport[0];
+  if (!stats?.length) return;
+
+  const allStats = isCompare ? citiesToExport.map(d => d.stats) : null;
+  const sharedY = allStats?.length ? getBarChartYDomain(allStats) : null;
+  const sharedColor = allStats?.length ? getBarChartColorContext(allStats, allStats[0]) : null;
+
+  const PANEL_W = 660;
+  const PAD = 12;
+  const HEADER = 48;
+  const CHART_W = PANEL_W - PAD * 2;
+  const CHART_H = Math.round(CHART_W * 580 / 780);
+  const PANEL_H = HEADER + CHART_H + PAD;
+  const GAP = 10;
+  const MARGIN = 24;
+  const cols = citiesToExport.length;
+  const exportW = MARGIN * 2 + cols * PANEL_W + Math.max(0, cols - 1) * GAP;
+  const exportH = MARGIN * 2 + PANEL_H;
+  const dpr = 2;
+  const steps = animationSteps(stats.length);
+
+  const frames = [];
+  for (const barLimit of steps) {
+    const c = document.createElement('canvas');
+    c.width = exportW * dpr;
+    c.height = exportH * dpr;
+    const x = c.getContext('2d');
+    x.scale(dpr, dpr);
+    x.fillStyle = cssVar('--bg', '#0b0b0c');
+    x.fillRect(0, 0, exportW, exportH);
+
+    for (let i = 0; i < citiesToExport.length; i++) {
+      const entry = citiesToExport[i];
+      const scales = (isCompare && S.sharedScale && sharedY)
+        ? { yDomain: sharedY, ...sharedColor }
+        : { yDomain: getBarChartYDomain([entry.stats]), ...getBarChartColorContext([entry.stats], entry.stats) };
+
+      const tmp = document.createElement('div');
+      tmp.innerHTML = buildBarChartSVG(entry.city, entry.stats, scales, varLabel, barLimit);
+      const panel = tmp.firstElementChild;
+      const title = panel.querySelector('.barchart-panel__title').textContent;
+      const subtitle = panel.querySelector('.barchart-panel__subtitle').textContent;
+      const svgMarkup = new XMLSerializer().serializeToString(panel.querySelector('svg'));
+
+      const px = MARGIN + i * (PANEL_W + GAP);
+      const py = MARGIN;
+
+      x.fillStyle = cssVar('--panel-bg', 'rgba(14,14,15,.9)');
+      x.strokeStyle = cssVar('--rule', 'rgba(236,230,216,.16)');
+      x.lineWidth = 1;
+      roundRectFillStroke(x, px, py, PANEL_W, PANEL_H, 3);
+
+      x.fillStyle = cssVar('--ink', '#ece6d8');
+      x.font = '800 19px "Playfair Display", Georgia, serif';
+      x.fillText(title, px + PAD, py + 22);
+      x.fillStyle = cssVar('--text-dim', 'rgba(236,230,216,.6)');
+      x.font = '500 10.5px Inter, sans-serif';
+      x.fillText(subtitle, px + PAD, py + 38);
+
+      try {
+        const chartImg = await loadSvgToCanvas(svgMarkup, CHART_W, CHART_H);
+        x.drawImage(chartImg, px + PAD, py + HEADER, CHART_W, CHART_H);
+      } catch (err) {
+        console.error('Bar chart GIF frame failed', err);
+      }
+    }
+
+    drawPresentTitleOnCanvas(x, exportW, exportH, city.name);
+    const frame = document.createElement('canvas');
+    frame.width = exportW;
+    frame.height = exportH;
+    frame.getContext('2d').drawImage(c, 0, 0, exportW, exportH);
+    frames.push(frame);
+  }
+
+  try {
+    const blob = await encodeCanvasFrames(frames, 100);
+    triggerDownloadBlob(blob, `${exportBaseName()}.gif`);
+  } catch (err) {
+    console.error('GIF export failed', err);
+  }
+}
+
+document.getElementById('export-png-btn').addEventListener('click', async () => {
+  await ensureExportFonts();
+  if (S.chartView === 'bar') exportBarChartsPNG();
+  else exportStripesPNG();
+});
+
+document.getElementById('export-gif-btn').addEventListener('click', async () => {
+  await ensureExportFonts();
+  if (S.chartView === 'bar') exportBarChartsGIF();
+  else exportStripesGIF();
+});
+
+document.getElementById('export-svg-btn').addEventListener('click', async () => {
+  await ensureExportFonts();
+  if (S.chartView === 'bar') exportBarChartsSVG();
+  else exportStripesSVG();
+});
+
+// ─── Keyboard shortcuts ────────────────────────────────────────────────────
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'Escape') {
+    if (!document.getElementById('info-overlay').hidden) { toggleInfo(); return; }
+    togglePanel(); return;
+  }
+  if (e.key === 'h' || e.key === 'H') togglePanel();
+  if (e.key === 'c' || e.key === 'C') {
+    const next = S.coloring === 'anomaly' ? 'absolute' : 'anomaly';
+    document.querySelector(`#color-seg [data-val="${next}"]`)?.click();
+  }
+  if (e.key === 't' || e.key === 'T') setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'paper' : 'dark');
+  if (e.key === 'm' || e.key === 'M') {
+    const modes = ['single','compare'];
+    const next = modes[(modes.indexOf(S.mode)+1)%modes.length];
+    document.querySelector(`#mode-seg [data-val="${next}"]`)?.click();
+  }
+  if (e.key === 'l' || e.key === 'L') setLang(S.lang === 'en' ? 'it' : 'en');
+});
+
+// ─── Info modal ────────────────────────────────────────────────────────────
+function toggleInfo() {
+  const overlay = document.getElementById('info-overlay');
+  overlay.hidden = !overlay.hidden;
+}
+document.getElementById('info-btn').addEventListener('click', toggleInfo);
+document.getElementById('info-close').addEventListener('click', toggleInfo);
+document.getElementById('info-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) toggleInfo();
+});
+
+// Info modal tabs
+document.querySelectorAll('#info-tab-seg .seg__btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#info-tab-seg .seg__btn').forEach(b => b.classList.remove('is-on'));
+    btn.classList.add('is-on');
+    document.querySelectorAll('.info-tab').forEach(t => {
+      t.style.display = (t.dataset.tab === btn.dataset.val) ? 'flex' : 'none';
+    });
+  });
+});
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => { resize(); });
+resize();
+</script>
+</body>
+</html>
