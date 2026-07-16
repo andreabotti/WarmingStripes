@@ -165,7 +165,17 @@ def _ensure_static_server() -> None:
         pass
 
 
-_ensure_static_server()
+import os
+import streamlit.components.v1 as components
+
+# Only start the local API server when actually running locally. On Streamlit
+# Cloud (or any host where the browser and the Python process are different
+# machines), "localhost" in the browser means the VISITOR'S machine, not the
+# server -- so an <iframe src="http://localhost:PORT"> can never resolve
+# there. Set WARMINGSTRIPES_LOCAL=1 in your local shell to enable it.
+_RUNNING_LOCALLY = os.environ.get("WARMINGSTRIPES_LOCAL") == "1"
+if _RUNNING_LOCALLY:
+    _ensure_static_server()
 
 # ── Streamlit page ────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -181,11 +191,16 @@ html, body, .stApp { background:#0b0b0c!important; margin:0; padding:0; overflow
 [data-testid="stAppViewContainer"], [data-testid="stMain"],
 [data-testid="stMain"] > div, .stMainBlockContainer, .block-container {
   padding:0!important; margin:0!important; max-width:100%!important; overflow:hidden!important }
+iframe { position:fixed!important; top:0!important; left:0!important;
+         width:100vw!important; height:100vh!important; border:none!important; z-index:9999!important }
 </style>""", unsafe_allow_html=True)
 
-st.markdown(
-    f'<iframe src="http://localhost:{_STATIC_PORT}/_thermachrome.html"'
-    ' style="position:fixed;top:0;left:0;width:100vw;height:100vh;border:none;z-index:9999"'
-    ' allowfullscreen></iframe>',
-    unsafe_allow_html=True,
-)
+# Embed the HTML directly via srcdoc (components.html) instead of pointing an
+# iframe at an external "http://localhost:PORT" URL. This works identically
+# locally and on Streamlit Cloud -- no separate server or port needed for the
+# page to load at all. The page's own JS already targets
+# `window.location.origin` for the optional local ERA5 fast-path and falls
+# back to Open-Meteo automatically if that route 404s, so nothing else here
+# needs to change.
+_html_content = (_PAGES_DIR / "_thermachrome.html").read_text(encoding="utf-8")
+components.html(_html_content, height=1000, scrolling=False)
