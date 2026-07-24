@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Warming Stripes</title>
+<title>Warming in Colour</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
@@ -124,6 +124,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-sans);
 .seg--grid .seg__btn { border:1px solid var(--rule); border-radius:2px }
 .seg__btn:hover { color:var(--text); background:var(--hover) }
 .seg__btn.is-on { background:var(--ink); color:var(--bg) }
+.seg__btn.is-locked { opacity:.28; cursor:default; pointer-events:none }
+.seg__btn.is-locked:hover { color:var(--text-dim); background:transparent }
 /* Field rows */
 .field-row { display:flex; align-items:center; justify-content:space-between; gap:12px }
 .field-row__label { font-size:10.5px; font-weight:600; letter-spacing:.08em;
@@ -233,6 +235,46 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
 .barchart-bar { cursor:crosshair; }
 .barchart-bar-hit { cursor:crosshair; fill:transparent; stroke:none; }
 .barchart-bar-vis { pointer-events:none; }
+/* Ridgeline view — one overlapping-density panel per city, ridge per year */
+.ridgeline-overlay { position:fixed; top:0; right:0; bottom:0; left:354px; z-index:6;
+                     display:none; align-items:center; justify-content:center;
+                     transition:left .2s; pointer-events:none; overflow:auto;
+                     padding:8px 10px; box-sizing:border-box }
+.ridgeline-overlay.visible { display:flex; pointer-events:auto }
+.ridgeline-shell { display:flex; flex-direction:column; align-items:center; gap:14px;
+                  width:min(98%, calc(100vw - var(--ridgeline-left, 354px) - 20px));
+                  max-height:88vh }
+.ridgeline-nav { display:flex; align-items:center; justify-content:center; gap:18px;
+                flex:none; user-select:none }
+.ridgeline-nav[hidden] { display:none !important }
+.ridgeline-nav__btn { width:36px; height:36px; border-radius:var(--radius);
+                     border:1px solid var(--rule); background:var(--surface);
+                     color:var(--ink); font-size:22px; line-height:1; cursor:pointer;
+                     font-family:var(--font-serif); transition:border-color .14s,color .14s,opacity .14s }
+.ridgeline-nav__btn:hover:not(:disabled) { border-color:var(--ink) }
+.ridgeline-nav__btn:disabled { opacity:.28; cursor:default }
+.ridgeline-nav__label { min-width:220px; text-align:center; font-size:11.5px; font-weight:600;
+                       letter-spacing:.06em; text-transform:uppercase; color:var(--text-dim) }
+.ridgeline-grid { display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+                   align-items:stretch; width:100%; height:auto }
+.ridgeline-grid--1 { max-width:890px }
+.ridgeline-grid--2 { max-width:1690px }
+.ridgeline-grid--3 { max-width:2260px }
+.ridgeline-grid--4 { max-width:2720px }
+.ridgeline-grid--single { max-width:890px; flex-wrap:nowrap; justify-content:center }
+.ridgeline-panel { flex:1 1 401px; max-width:660px; min-width:372px; display:flex; flex-direction:column;
+                   background:var(--panel-bg); border:1px solid var(--rule);
+                   border-radius:var(--radius); padding:10px 12px 6px;
+                   box-shadow:var(--frame-shadow);
+                   backdrop-filter:blur(16px) saturate(1.05) }
+.ridgeline-panel__title { margin:0 0 1px; font-family:var(--font-serif);
+                          font-size:19px; font-weight:800; color:var(--ink) }
+.ridgeline-panel__subtitle { margin:0 0 6px; font-size:10.5px; color:var(--text-dim);
+                             letter-spacing:.02em }
+.ridgeline-svg { display:block; width:100%; max-width:100%; height:auto; margin:0 auto;
+                aspect-ratio:780 / 744; max-height:82vh }
+.ridgeline-row { pointer-events:none; }
+.ridgeline-row-hit { cursor:crosshair; fill:transparent; stroke:none; }
 /* Hover guide line — tracks the pointer across the full stripe height */
 .hover-line { position:fixed; top:0; height:100vh; width:1px;
               background:rgba(255,255,255,.7); pointer-events:none;
@@ -262,8 +304,8 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
 .cover__title { margin:0; font-family:var(--font-serif); font-size:clamp(38px,7vw,82px);
                 font-weight:800; line-height:.98; letter-spacing:-.02em; color:var(--ink) }
 .cover__spectrum { height:4px; width:min(420px,70%); margin:24px auto; background:var(--spectrum) }
-.cover__dek { margin:0 auto; max-width:500px; font-family:var(--font-serif);
-              font-size:clamp(14px,1.5vw,18px); line-height:1.6; color:var(--text-dim) }
+.cover__dek { margin:0 auto; max-width:500px; font-family:var(--font-sans);
+              font-size:clamp(14px,1.5vw,18px); font-weight:600; line-height:1.6; color:var(--text-dim) }
 .cover__cities { margin-top:28px; display:flex; flex-wrap:wrap; align-items:baseline;
                  justify-content:center; gap:4px }
 .cover__begin { margin-right:6px; font-size:10px; font-weight:600; letter-spacing:.2em;
@@ -362,6 +404,32 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
 .info-section p { margin:0; font-size:12.5px; line-height:1.65; color:var(--text-dim) }
 .info-section strong { color:var(--ink); font-weight:600 }
 .info-section a { color:var(--ink); text-underline-offset:2px }
+/* Top-right Thermachrome attribution (15% smaller than info-section body: 12.5px → 10.625px) */
+.thermachrome-credit {
+  position:fixed; top:18px; right:18px; z-index:11;
+  max-width:calc(100vw - 36px);
+  padding:5px 11px; border-radius:var(--radius);
+  font-size:10.625px; line-height:1.2; font-weight:500;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  pointer-events:auto;
+}
+.app:has(.panel:not(.hidden)) .thermachrome-credit {
+  max-width:calc(100vw - 354px);
+}
+.app:has(.overlay--welcome:not(.hidden)) .thermachrome-credit {
+  visibility:hidden; pointer-events:none;
+}
+html[data-theme=dark] .thermachrome-credit,
+html:not([data-theme]) .thermachrome-credit {
+  background:#141416; color:#f5f2eb;
+  border:1px solid rgba(255,255,255,.08);
+}
+html[data-theme=paper] .thermachrome-credit {
+  background:#ebe6dc; color:#1c1a17;
+  border:1px solid rgba(28,26,23,.12);
+}
+.thermachrome-credit a { color:inherit; text-decoration:underline; text-underline-offset:2px }
+.thermachrome-credit a:hover { opacity:.82 }
 /* Spinner */
 .spinner { width:11px; height:11px; border-radius:50%; border:2px solid var(--rule);
            border-top-color:var(--ink); animation:spin .7s linear infinite; flex:none }
@@ -374,11 +442,13 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
 <div class="app">
   <canvas id="stripes-canvas" class="stripes-canvas"></canvas>
 
+  <p class="thermachrome-credit" id="thermachrome-credit" data-i18n="thermachrome_credit"></p>
+
   <!-- Welcome overlay -->
   <div class="overlay overlay--welcome" id="cover">
     <div class="cover">
       <p class="cover__kicker" data-i18n="kicker">Open Source Climate Data</p>
-      <h1 class="cover__title">Warming Stripes</h1>
+      <h1 class="cover__title" data-i18n="app_title">Warming in Colour</h1>
       <div class="cover__spectrum"></div>
       <p class="cover__dek" data-i18n="cover_dek">Paint any city's true thermal history in colour and explore daily, weekly, monthly, and yearly comparisons to understand how global warming has changed<br>the climate of our cities.</p>
       <div class="cover__cities" id="cover-cities">
@@ -391,7 +461,7 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
   <aside class="panel" id="main-panel">
     <div class="masthead">
       <p class="masthead__kicker" data-i18n="kicker">Open Source Climate Data</p>
-      <h1 class="masthead__title">Warming Stripes</h1>
+      <h1 class="masthead__title" data-i18n="app_title">Warming in Colour</h1>
       <button class="info-btn" id="info-btn" data-i18n-attr="title:info_btn_title" title="About data &amp; method">i</button>
       <div class="masthead__spectrum"></div>
     </div>
@@ -548,6 +618,7 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
       <div class="seg" id="chartview-seg">
         <button class="seg__btn is-on" data-val="stripes" data-i18n="seg_stripes">Stripes</button>
         <button class="seg__btn" data-val="bar" data-i18n="seg_bar">Bar Chart</button>
+        <button class="seg__btn" data-val="ridge" data-i18n="seg_ridge">Ridgeline</button>
       </div>
     </section>
 
@@ -588,7 +659,7 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
   <button class="show-panel-hint" id="show-hint" onclick="togglePanel()" data-i18n="show_panel_hint">&#9654; Show panel</button>
 
   <div class="present-title" id="present-title" style="display:none">
-    <p class="present-title__kicker" data-i18n="present_title_kicker">Climate Warming Stripes</p>
+    <p class="present-title__kicker" data-i18n="present_title_kicker">Warming in Colour</p>
     <h2 class="present-title__name" id="present-title-name"></h2>
     <div class="present-title__rule"></div>
   </div>
@@ -667,7 +738,7 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
           <div class="info-section">
             <h3 data-i18n="info_credits_h1">Design inspiration</h3>
             <p data-i18n="info_credits_p1">The visual concept and interaction design of this viewer is inspired by
-            <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Thermachrome</a>,
+            <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Living Warming Stripes</a>,
             created by <strong>Alejandro Quinto Fernández</strong>
             (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>).
             This is an independent re-creation built for EETRA srl SB, extended with
@@ -695,6 +766,17 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
       <div class="barchart-grid" id="barchart-grid"></div>
     </div>
   </div>
+
+  <div class="ridgeline-overlay" id="ridgeline-overlay">
+    <div class="ridgeline-shell">
+      <div class="ridgeline-nav" id="ridgeline-nav" hidden>
+        <button type="button" class="ridgeline-nav__btn" id="ridgeline-prev" data-i18n-attr="aria-label:aria_prev_city" aria-label="Previous city">&#8249;</button>
+        <span class="ridgeline-nav__label" id="ridgeline-nav-label"></span>
+        <button type="button" class="ridgeline-nav__btn" id="ridgeline-next" data-i18n-attr="aria-label:aria_next_city" aria-label="Next city">&#8250;</button>
+      </div>
+      <div class="ridgeline-grid" id="ridgeline-grid"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -717,14 +799,16 @@ const S = {
   compareB: null,
   panelVisible: true,
   model: 'era5_land',  // era5_land | era5 | cerra | ecmwf_ifs
-  chartView: 'stripes', // stripes | bar
+  chartView: 'stripes', // stripes | bar | ridge
   barIndex: 0,           // single/collage bar-chart carousel index
+  ridgeIndex: 0,         // single/collage ridgeline carousel index
   lang: 'en',            // en | it — UI language
 };
 
 // ─── i18n ───────────────────────────────────────────────────────────────────
 const I18N = {
   en: {
+    app_title: 'Warming in Colour',
     kicker: 'Open Source Climate Data',
     cover_dek: "Paint any city's true thermal history in colour and explore daily, weekly, monthly, and yearly comparisons to understand how global warming has changed<br>the climate of our cities.",
     cover_begin: 'Begin with',
@@ -742,7 +826,7 @@ const I18N = {
     section_export: 'Export',
     section_colors: 'Colors',
     section_language: 'Language',
-    chartview_info: 'Bar chart shows all cities in list 01, side by side, yearly anomaly, shared axis &amp; colour scale.',
+    chartview_info: 'Bar chart shows all cities in list 01, side by side, yearly anomaly, shared axis &amp; colour scale. Ridgeline shows one overlapping density curve per year, revealing how the daily distribution has shifted.',
     baseline_period_label: 'Period',
     baseline_period_info: 'WMO/Copernicus standard normal',
     range_years_label: 'Years',
@@ -753,6 +837,7 @@ const I18N = {
     seg_indep: 'Indep.',
     seg_stripes: 'Stripes',
     seg_bar: 'Bar Chart',
+    seg_ridge: 'Ridgeline',
     theme_dark: 'Dark',
     theme_paper: 'Paper',
     export_png: 'PNG',
@@ -780,7 +865,7 @@ const I18N = {
     color_anomaly: 'Anomaly',
     color_absolute: 'Absolute',
     show_panel_hint: '&#9654; Show panel',
-    present_title_kicker: 'Climate Warming Stripes',
+    present_title_kicker: 'Warming in Colour',
     info_modal_title: 'Data &amp; Method',
     info_close_title: 'Close',
     info_tab_sources: 'Sources',
@@ -802,7 +887,8 @@ const I18N = {
     info_method_h3: 'Absolute colour scale',
     info_method_p3: 'When <em>Absolute</em> colouring is selected, <strong>Mean</strong> uses the full RdBu palette mapped linearly from the coldest to the warmest value in the current dataset. <strong>Maximum</strong> and <strong>Minimum</strong> use fixed half-palettes instead — Maximum ranges white (0°C) to dark red (40°C), Minimum ranges dark blue (−20°C) to white (0°C) — so a mild 12°C reading is never mistaken for deep cold.',
     info_credits_h1: 'Design inspiration',
-    info_credits_p1: 'The visual concept and interaction design of this viewer is inspired by <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Thermachrome</a>, created by <strong>Alejandro Quinto Fernández</strong> (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>). This is an independent re-creation built for EETRA srl SB, extended with local Italian ERA5 station data, multi-city comparison, and a classic bar-chart view.',
+    info_credits_p1: 'The visual concept and interaction design of this viewer is inspired by <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Living Warming Stripes</a>, created by <strong>Alejandro Quinto Fernández</strong> (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>). This is an independent re-creation built for EETRA srl SB, extended with local Italian ERA5 station data, multi-city comparison, and a classic bar-chart view.',
+    thermachrome_credit: 'This app is heavily inspired by the <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Living Warming Stripes</a> app, created by Alejandro Quinto.',
     drag_to_reorder: 'Drag to reorder',
     remove_city: 'Remove',
     era5_local_title: 'Served from local ERA5 parquet',
@@ -830,13 +916,18 @@ const I18N = {
     bar_subtitle_min: '{v} absolute min temperature [°C]',
     bar_subtitle_mean: '{v} absolute temperature [°C]',
     bar_xaxis_weeks: 'Weeks',
+    ridge_subtitle_anomaly: 'Daily {v} distribution, one ridge per year, coloured by annual anomaly vs {start}–{end}',
+    ridge_subtitle_abs: 'Daily {v} distribution, one ridge per year',
+    ridge_subtitle_monthly: 'Daily {v} distribution per month, {year}',
     date_week_of: 'Week of {date} (WK {wk})',
     month_abbr: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    month_full: ['january','february','march','april','may','june','july','august','september','october','november','december'],
     locale: 'en-GB',
   },
   it: {
+    app_title: 'Warming in Colour',
     kicker: 'Dati climatici open source',
-    cover_dek: "Dipingi la vera storia termica di qualsiasi città usando il colore ed effettua confronti giornalieri, settimanali, mensili e annuali per comprendere come il riscaldamento globale ha modificato<br>il clima delle nostre città.",
+    cover_dek: 'Dipingi la vera storia termica di qualsiasi città usando il colore ed effettua confronti giornalieri, settimanali, mensili e annuali per comprendere come il riscaldamento globale ha modificato il clima delle nostre città.',
     cover_begin: 'Inizia con',
     info_btn_title: 'Informazioni su dati e metodo',
     section_city: 'Città',
@@ -852,7 +943,7 @@ const I18N = {
     section_export: 'Esporta',
     section_colors: 'Colori',
     section_language: 'Lingua',
-    chartview_info: 'Il grafico a barre mostra tutte le città nell\'elenco 01, affiancate, anomalia annuale, asse e scala colore condivisi.',
+    chartview_info: 'Il grafico a barre mostra tutte le città nell\'elenco 01, affiancate, anomalia annuale, asse e scala colore condivisi. Il ridgeline mostra una curva di densità sovrapposta per ogni anno, rivelando come è cambiata la distribuzione giornaliera.',
     baseline_period_label: 'Periodo',
     baseline_period_info: 'Normale climatologica standard OMM/Copernicus',
     range_years_label: 'Anni',
@@ -863,6 +954,7 @@ const I18N = {
     seg_indep: 'Indip.',
     seg_stripes: 'Strisce',
     seg_bar: 'Grafico a barre',
+    seg_ridge: 'Ridgeline',
     theme_dark: 'Scuro',
     theme_paper: 'Chiaro',
     export_png: 'PNG',
@@ -890,7 +982,7 @@ const I18N = {
     color_anomaly: 'Anomalia',
     color_absolute: 'Assoluta',
     show_panel_hint: '&#9654; Mostra pannello',
-    present_title_kicker: 'Strisce del riscaldamento climatico',
+    present_title_kicker: 'Warming in Colour',
     info_modal_title: 'Dati e metodo',
     info_close_title: 'Chiudi',
     info_tab_sources: 'Fonti',
@@ -912,7 +1004,8 @@ const I18N = {
     info_method_h3: 'Scala colore assoluta',
     info_method_p3: "Quando è selezionata la colorazione <em>Assoluta</em>, <strong>Media</strong> utilizza l'intera palette RdBu mappata linearmente dal valore più freddo al più caldo nel dataset corrente. <strong>Massima</strong> e <strong>Minima</strong> utilizzano invece semi-palette fisse — Massima varia dal bianco (0°C) al rosso scuro (40°C), Minima dal blu scuro (−20°C) al bianco (0°C) — così una lettura mite di 12°C non viene mai scambiata per freddo intenso.",
     info_credits_h1: 'Ispirazione del design',
-    info_credits_p1: 'Il concetto visivo e il design di interazione di questo visualizzatore sono ispirati a <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Thermachrome</a>, creato da <strong>Alejandro Quinto Fernández</strong> (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>). Questa è una ricreazione indipendente realizzata per EETRA srl SB, estesa con dati stazione ERA5 locali italiani, confronto multi-città e una vista classica a grafico a barre.',
+    info_credits_p1: 'Il concetto visivo e il design di interazione di questo visualizzatore sono ispirati a <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Living Warming Stripes</a>, creato da <strong>Alejandro Quinto</strong> (<a href="https://www.linkedin.com/in/alejandro-quinto/" target="_blank" rel="noopener">LinkedIn</a>). Questa è una ricreazione indipendente realizzata per EETRA srl SB, estesa con dati stazione ERA5 locali italiani, confronto multi-città e una vista classica a grafico a barre.',
+    thermachrome_credit: 'Questa app è fortemente ispirata all\'app <a href="https://thermachrome.netlify.app/" target="_blank" rel="noopener">Living Warming Stripes</a>, creata da Alejandro Quinto.',
     drag_to_reorder: 'Trascina per riordinare',
     remove_city: 'Rimuovi',
     era5_local_title: 'Servito dal parquet ERA5 locale',
@@ -940,8 +1033,12 @@ const I18N = {
     bar_subtitle_min: '{v} temperatura minima assoluta [°C]',
     bar_subtitle_mean: '{v} temperatura assoluta [°C]',
     bar_xaxis_weeks: 'Settimane',
+    ridge_subtitle_anomaly: 'Distribuzione giornaliera di {v}, una cresta per anno, colorata in base all\'anomalia annuale vs {start}–{end}',
+    ridge_subtitle_abs: 'Distribuzione giornaliera di {v}, una cresta per anno',
+    ridge_subtitle_monthly: 'Distribuzione giornaliera di {v} per mese, {year}',
     date_week_of: 'Settimana del {date} (SETT {wk})',
     month_abbr: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
+    month_full: ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'],
     locale: 'it-IT',
   },
 };
@@ -965,6 +1062,7 @@ function applyI18n() {
   });
   document.getElementById('lang-en')?.classList.toggle('is-on', S.lang === 'en');
   document.getElementById('lang-it')?.classList.toggle('is-on', S.lang === 'it');
+  document.title = t('app_title');
 }
 
 function setLang(lang, opts) {
@@ -1053,10 +1151,13 @@ const BAR_ABS_MEAN_Y = [0, 42];
 function anomalyT(anom, std) { return Math.max(0, Math.min(1, 0.5 + anom / (std * 3))); }
 function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
 
-// ─── Local ERA5 API (served by warming_stripes.py on the same origin) ─────
-// Only available when the page is served from the Python static server (port 8594).
-// Falls back silently to Open-Meteo when unavailable (embedded via components.html).
-const LOCAL_API = window.location.origin;
+// ─── Local ERA5 API (served by warming_stripes.py's static server) ────────
+// Only available when running locally (WARMINGSTRIPES_LOCAL=1). The page is
+// embedded via components.html srcdoc, so window.location.origin resolves to
+// Streamlit's own origin, not the static API server -- app.py injects the
+// real base URL as window.__LOCAL_API_BASE__ before this script runs.
+// Falls back silently to Open-Meteo when unavailable (e.g. Streamlit Cloud).
+const LOCAL_API = window.__LOCAL_API_BASE__ || window.location.origin;
 
 async function checkLocalEra5(lat, lon) {
   try {
@@ -1073,6 +1174,12 @@ async function fetchLocalEra5(stationId) {
   return { dates: j.dates, mean: j.mean, max: j.max, min: j.min, source: 'era5_local' };
 }
 
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
 // ─── Open-Meteo API ────────────────────────────────────────────────────────
 async function searchCities(q) {
   const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=en&format=json`);
@@ -1083,17 +1190,22 @@ async function fetchRaw(city) {
   const key = rawCacheKey(city.id);
   if (rawCache.has(key)) return rawCache.get(key);
 
-  // Use local ERA5 parquet when available (instant, no rate limits)
+  // Use local ERA5 parquet when available (instant, no rate limits, no
+  // network). The parquets are pre-downloaded through the latest ERA5
+  // reanalysis date, so we deliberately do NOT top up over Open-Meteo here:
+  // a local hit must never trigger an external API call (that was the cause
+  // of the lingering "loading" dot on Italian cities).
   if (city.era5StationId) {
     const data = await fetchLocalEra5(city.era5StationId);
     rawCache.set(key, data);
     return data;
   }
 
-  // Fall back to Open-Meteo
+  // Fall back to Open-Meteo. end_date must not exceed yesterday -- the
+  // archive API 400s if asked for "today" (data isn't published yet).
   const m = MODELS[S.model];
   const startDate = `${m.start}-01-01`;
-  const endDate   = m.end ? `${m.end}-12-31` : new Date().toISOString().slice(0,10);
+  const endDate   = m.end ? `${m.end}-12-31` : addDays(new Date().toISOString().slice(0,10), -1);
   const url = `https://archive-api.open-meteo.com/v1/archive`
     + `?latitude=${city.lat}&longitude=${city.lon}`
     + `&start_date=${startDate}&end_date=${endDate}`
@@ -1709,6 +1821,353 @@ function renderBarCharts() {
   overlay.classList.add('visible');
 }
 
+// ─── Ridgeline view (overlapping per-year density curves, one panel per city) ──
+const RIDGE_BINS = 48;
+const RIDGE_SVG_W = 780;
+const RIDGE_SVG_H = 900;
+const RIDGE_ABS_X_DOMAIN = [-10, 45];
+const RIDGE_X_TICK_FS = 11 * 1.25;
+const RIDGE_MONTH_LABEL_FS = 12.5 * 1.10;
+const RIDGE_ALLOWED_GRANULARITIES = new Set(['daily', 'yearly']);
+
+function ridgelineSubtitle(varLabel, isMonthMode) {
+  if (isMonthMode) {
+    return fillTemplate(t('ridge_subtitle_monthly'), { v: varLabel, year: S.selectedYear });
+  }
+  if (S.coloring === 'anomaly') {
+    return fillTemplate(t('ridge_subtitle_anomaly'), { v: varLabel, start: S.baselineStart, end: S.baselineEnd });
+  }
+  return fillTemplate(t('ridge_subtitle_abs'), { v: varLabel });
+}
+
+function ridgeHistogram(values, xMin, xMax, bins) {
+  const counts = new Array(bins).fill(0);
+  const bw = (xMax - xMin) / bins || 1;
+  for (const v of values) {
+    let idx = Math.floor((v - xMin) / bw);
+    if (idx < 0) idx = 0;
+    if (idx >= bins) idx = bins - 1;
+    counts[idx]++;
+  }
+  return counts;
+}
+
+function ridgeSmooth(counts, passes = 2) {
+  let arr = counts.slice();
+  for (let p = 0; p < passes; p++) {
+    const next = arr.slice();
+    for (let i = 0; i < arr.length; i++) {
+      const a = arr[i - 1] ?? arr[i];
+      const b = arr[i];
+      const c = arr[i + 1] ?? arr[i];
+      next[i] = (a + 2 * b + c) / 4;
+    }
+    arr = next;
+  }
+  return arr;
+}
+
+// One ridge per year: bucket the raw daily readings for the selected
+// variable by calendar year, independent of the Granularity control (a
+// ridgeline of every day/week is unreadable — years give one clean curve
+// each). Reuses the same yearly aggregate/baseline pipeline as the stripes
+// view so anom/std (and therefore colour) line up exactly.
+function getRidgelineYearRows(city) {
+  const raw = rawCache.get(rawCacheKey(city.id));
+  if (!raw) return null;
+  raw._id = rawCacheKey(city.id);
+  const rs = S.rangeStart, re = S.rangeEnd;
+  const yearlySeries = aggregate(raw, 'yearly', S.variable, rs, re);
+  const yearlyStats = computeStats(yearlySeries, S.baselineStart, S.baselineEnd, 'yearly');
+  const byYear = new Map();
+  const vals = raw[S.variable];
+  for (let i = 0; i < raw.dates.length; i++) {
+    const v = vals[i];
+    if (v == null) continue;
+    const y = parseInt(raw.dates[i].slice(0, 4), 10);
+    if (y < rs || y > re) continue;
+    if (!byYear.has(y)) byYear.set(y, { values: [], dates: [] });
+    byYear.get(y).values.push(v);
+    byYear.get(y).dates.push(raw.dates[i]);
+  }
+  return yearlyStats
+    .map(p => {
+      const yr = parseInt(p.k, 10);
+      const bucket = byYear.get(yr) || { values: [], dates: [] };
+      return { ...p, values: bucket.values, dates: bucket.dates };
+    })
+    .filter(r => r.values.length >= 10);
+}
+
+// Daily granularity: one ridge per calendar month (Jan..Dec) of the selected
+// year (section 08 "Range" → Year), built from that month's daily readings —
+// reproduces https://python-graph-gallery.com/ridgeline-graph-seaborn/.
+// Baseline/anomaly per month is computed from the full model history so the
+// 1961-1990 reference exists, same guard as getSeriesForCity's sub-annual path.
+function getRidgelineMonthRows(city) {
+  const raw = rawCache.get(rawCacheKey(city.id));
+  if (!raw) return null;
+  raw._id = rawCacheKey(city.id);
+  const model = MODELS[S.model];
+  const fullStart = model.start;
+  const fullEnd = model.end ?? new Date().getUTCFullYear();
+  const monthlySeriesFull = aggregate(raw, 'monthly', S.variable, fullStart, fullEnd);
+  const monthlyStatsFull = computeStats(monthlySeriesFull, S.baselineStart, S.baselineEnd, 'monthly');
+  const yearStats = monthlyStatsFull.filter(p => p.k.startsWith(String(S.selectedYear)));
+
+  const byMonth = new Map();
+  const vals = raw[S.variable];
+  const yearPrefix = String(S.selectedYear);
+  for (let i = 0; i < raw.dates.length; i++) {
+    const v = vals[i];
+    if (v == null) continue;
+    if (!raw.dates[i].startsWith(yearPrefix)) continue;
+    const mo = parseInt(raw.dates[i].slice(5, 7), 10);
+    if (!byMonth.has(mo)) byMonth.set(mo, { values: [], dates: [] });
+    byMonth.get(mo).values.push(v);
+    byMonth.get(mo).dates.push(raw.dates[i]);
+  }
+  return yearStats
+    .map(p => {
+      const mo = parseInt(p.k.slice(5, 7), 10);
+      const bucket = byMonth.get(mo) || { values: [], dates: [] };
+      return { ...p, values: bucket.values, dates: bucket.dates };
+    })
+    .filter(r => r.values.length >= 5);
+}
+
+function getRidgelineRows(city) {
+  return S.granularity === 'daily' ? getRidgelineMonthRows(city) : getRidgelineYearRows(city);
+}
+
+function getRidgelineCities() {
+  return S.cities
+    .filter(c => rawCache.has(rawCacheKey(c.id)))
+    .map(c => {
+      const raw = rawCache.get(rawCacheKey(c.id));
+      raw._id = rawCacheKey(c.id);
+      return { city: c, rows: getRidgelineRows(c), raw };
+    })
+    .filter(d => d.rows?.length);
+}
+
+function getDailySlotBaselines(raw) {
+  const bySlot = new Map();
+  const vals = raw[S.variable];
+  for (let i = 0; i < raw.dates.length; i++) {
+    const v = vals[i];
+    if (v == null) continue;
+    const y = parseInt(raw.dates[i].slice(0, 4), 10);
+    if (y < S.baselineStart || y > S.baselineEnd) continue;
+    const slot = raw.dates[i].slice(5);
+    if (!bySlot.has(slot)) bySlot.set(slot, []);
+    bySlot.get(slot).push(v);
+  }
+  const slotMean = new Map();
+  for (const [slot, arr] of bySlot) {
+    slotMean.set(slot, arr.reduce((a, b) => a + b, 0) / arr.length);
+  }
+  const all = [...bySlot.values()].flat();
+  const globalMean = all.length ? all.reduce((a, b) => a + b, 0) / all.length : 0;
+  return { slotMean, globalMean };
+}
+
+function ridgeRowPlotValues(row, raw) {
+  if (S.coloring !== 'anomaly') return row.values;
+  const { slotMean, globalMean } = getDailySlotBaselines(raw);
+  return row.values.map((v, i) => {
+    const slot = row.dates[i].slice(5);
+    return v - (slotMean.get(slot) ?? globalMean);
+  });
+}
+
+function getRidgelineXDomain(cityEntries) {
+  if (S.coloring === 'absolute') return [...RIDGE_ABS_X_DOMAIN];
+  let mn = Infinity, mx = -Infinity;
+  for (const entry of cityEntries) {
+    const rows = entry.rows ?? entry;
+    const raw = entry.raw;
+    for (const r of rows) {
+      const pvals = raw ? ridgeRowPlotValues(r, raw) : r.values;
+      for (const v of pvals) {
+        if (v < mn) mn = v;
+        if (v > mx) mx = v;
+      }
+    }
+  }
+  if (!isFinite(mn) || !isFinite(mx)) return [0, 1];
+  const pad = Math.max(S.coloring === 'anomaly' ? 0.3 : 1, (mx - mn) * 0.08);
+  return [mn - pad, mx + pad];
+}
+
+function ridgeDensitiesForRows(rows, raw, xDomain, bins = RIDGE_BINS) {
+  const [xMin, xMax] = xDomain;
+  return rows.map(r => ridgeSmooth(ridgeHistogram(ridgeRowPlotValues(r, raw), xMin, xMax, bins), 2));
+}
+
+function formatRidgeAxisTick(v, isAnomaly) {
+  if (isAnomaly) {
+    const sign = v > 0 ? '+' : '';
+    return `${sign}${v.toFixed(1)}&#176;`;
+  }
+  return `${v.toFixed(0)}&#176;`;
+}
+
+function buildRidgelineSVG(city, rows, xDomain, colorCtx, varLabel, sharedMaxDensity, raw) {
+  const { dMin, dMax, anomDomain } = colorCtx;
+  const [xMin, xMax] = xDomain;
+  const isAnomalyAxis = S.coloring === 'anomaly';
+  const Wv = RIDGE_SVG_W, Hv = RIDGE_SVG_H;
+  // Month mode: one ridge per calendar month of the selected year (rows keyed
+  // 'YYYY-MM'), reproducing the seaborn gallery ridgeline — coloured axis
+  // line + bold month label per row, white-outlined ridges, tighter overlap
+  // since there are only 12 rows instead of a multi-decade year range.
+  const isMonthMode = rows.length > 0 && /^\d{4}-\d{2}$/.test(String(rows[0].k));
+  const marginL = 46, marginR = 16, marginB = 40;
+  const marginT = isMonthMode ? 70 : 18;
+  const plotW = Wv - marginL - marginR;
+  const plotH = Hv - marginT - marginB;
+  const n = rows.length;
+  const rowStep = isMonthMode ? plotH / (n + 1) : plotH / (n + 1.6);
+  const ridgeH = isMonthMode ? rowStep * 1.8 : rowStep * 3.0;
+
+  const densities = ridgeDensitiesForRows(rows, raw, xDomain);
+  const maxDensity = sharedMaxDensity ?? Math.max(1, ...densities.map(d => Math.max(...d)));
+
+  const xScale = v => marginL + ((v - xMin) / (xMax - xMin || 1)) * plotW;
+  const bw = (xMax - xMin) / RIDGE_BINS;
+  const yearStep = n > 40 ? 10 : n > 15 ? 5 : 1;
+  const monthNames = t('month_full');
+
+  let ridges = '', hits = '', rowLabels = '';
+  rows.forEach((r, i) => {
+    const baseline = marginT + (i + 1) * rowStep;
+    const dens = densities[i];
+    const [cr, cg, cb] = colorFn(r, S.coloring, dMin, dMax, anomDomain);
+    if (isMonthMode) {
+      ridges += `<line x1="${xScale(xMin).toFixed(2)}" y1="${baseline.toFixed(2)}" x2="${xScale(xMax).toFixed(2)}" y2="${baseline.toFixed(2)}" stroke="rgb(${cr},${cg},${cb})" stroke-width="1.4"/>`;
+    }
+    let d = `M ${xScale(xMin).toFixed(2)} ${baseline.toFixed(2)} `;
+    for (let b = 0; b < RIDGE_BINS; b++) {
+      const xc = xMin + (b + 0.5) * bw;
+      const y = baseline - (dens[b] / maxDensity) * ridgeH;
+      d += `L ${xScale(xc).toFixed(2)} ${y.toFixed(2)} `;
+    }
+    d += `L ${xScale(xMax).toFixed(2)} ${baseline.toFixed(2)} Z`;
+    const strokeColor = isMonthMode ? '#fff' : `rgb(${cr},${cg},${cb})`;
+    const fillOpacity = isMonthMode ? '0.95' : '0.88';
+    ridges += `<path class="ridgeline-row" d="${d}" fill="rgb(${cr},${cg},${cb})" fill-opacity="${fillOpacity}" stroke="${strokeColor}" stroke-width="1.4"/>`;
+    hits += `<rect class="ridgeline-row-hit" x="${marginL.toFixed(2)}" y="${(baseline - ridgeH).toFixed(2)}" width="${plotW.toFixed(2)}" height="${(ridgeH + rowStep * 0.4).toFixed(2)}"
+      data-key="${escapeHtml(String(r.k))}" data-v="${r.v.toFixed(2)}" data-anom="${r.anom.toFixed(2)}"/>`;
+    if (isMonthMode) {
+      const mo = parseInt(String(r.k).slice(5, 7), 10);
+      rowLabels += `<text x="${marginL.toFixed(2)}" y="${(baseline - rowStep * 0.55).toFixed(2)}" text-anchor="start" font-size="${RIDGE_MONTH_LABEL_FS}" font-weight="700" fill="rgb(${cr},${cg},${cb})">${escapeHtml(monthNames[mo - 1] || '')}</text>`;
+    } else {
+      const yr = parseInt(r.k, 10);
+      if (yr % yearStep === 0) {
+        rowLabels += `<text x="${(marginL - 8).toFixed(2)}" y="${(baseline + 3).toFixed(2)}" text-anchor="end" font-size="10" fill="var(--barchart-label)">${yr}</text>`;
+      }
+    }
+  });
+
+  const ticks = 5;
+  let xticks = '';
+  for (let i = 0; i <= ticks; i++) {
+    const v = xMin + (i / ticks) * (xMax - xMin);
+    const x = xScale(v);
+    xticks += `<text x="${x.toFixed(2)}" y="${(Hv - marginB + 16).toFixed(2)}" text-anchor="middle" font-size="${RIDGE_X_TICK_FS}" fill="var(--barchart-label)">${formatRidgeAxisTick(v, isAnomalyAxis)}</text>`;
+  }
+  const xAxisLabel = isAnomalyAxis ? `${t('tooltip_anomaly')} [°C]` : `${varLabel} [°C]`;
+  const xAxisTitle = `<text x="${(marginL + plotW / 2).toFixed(2)}" y="${Hv - 6}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--barchart-label)">${escapeHtml(xAxisLabel)}</text>`;
+
+  const html = `
+    <div class="ridgeline-panel">
+      <p class="ridgeline-panel__title">${escapeHtml(city.name)}</p>
+      <p class="ridgeline-panel__subtitle">${ridgelineSubtitle(varLabel, isMonthMode)}</p>
+      <svg class="ridgeline-svg" viewBox="0 0 ${Wv} ${Hv}" preserveAspectRatio="xMidYMid meet" data-city="${escapeHtml(city.name)}">${ridges}${hits}${rowLabels}${xticks}${xAxisTitle}</svg>
+    </div>`;
+  return { html, maxDensity };
+}
+
+function sharedRidgeMaxDensity(cityEntries, xDomain) {
+  let mx = 1;
+  for (const { rows, raw } of cityEntries) {
+    const d = ridgeDensitiesForRows(rows, raw, xDomain);
+    mx = Math.max(mx, ...d.map(row => Math.max(...row)));
+  }
+  return mx;
+}
+
+function layoutRidgelineOverlay() {
+  const left = S.panelVisible ? 354 : 0;
+  document.getElementById('ridgeline-overlay').style.left = left + 'px';
+  document.documentElement.style.setProperty('--ridgeline-left', left + 'px');
+}
+
+function updateRidgelineNav(perCity, index) {
+  const nav = document.getElementById('ridgeline-nav');
+  const label = document.getElementById('ridgeline-nav-label');
+  const prev = document.getElementById('ridgeline-prev');
+  const next = document.getElementById('ridgeline-next');
+  if (!nav || !label || !prev || !next) return;
+  if (perCity.length <= 1) {
+    nav.hidden = true;
+    return;
+  }
+  nav.hidden = false;
+  const current = perCity[index];
+  label.textContent = `${index + 1} / ${perCity.length} · ${current?.city?.name || ''}`;
+  prev.disabled = index <= 0;
+  next.disabled = index >= perCity.length - 1;
+}
+
+function renderRidgeline() {
+  layoutRidgelineOverlay();
+  hideHoverUI();
+  const overlay = document.getElementById('ridgeline-overlay');
+  const grid = document.getElementById('ridgeline-grid');
+  const perCity = getRidgelineCities();
+  if (!perCity.length) {
+    overlay.classList.remove('visible');
+    grid.innerHTML = '';
+    updateRidgelineNav([], 0);
+    return;
+  }
+
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const isCompare = S.mode === 'compare';
+
+  if (isCompare) {
+    document.getElementById('ridgeline-nav').hidden = true;
+    const shown = perCity.slice(0, 4);
+    const allRows = shown.map(d => d.rows);
+    const sharedColor = getBarChartColorContext(allRows, allRows[0]);
+    const sharedX = S.sharedScale ? getRidgelineXDomain(shown) : null;
+    const sharedDensity = sharedX ? sharedRidgeMaxDensity(shown, sharedX) : null;
+    grid.className = 'ridgeline-grid ridgeline-grid--' + Math.min(4, shown.length);
+    grid.innerHTML = shown.map(({city, rows, raw}) => {
+      const xd = sharedX || getRidgelineXDomain([{ rows, raw }]);
+      const color = S.sharedScale ? sharedColor : getBarChartColorContext([rows], rows);
+      const md = S.sharedScale ? sharedDensity : null;
+      return buildRidgelineSVG(city, rows, xd, color, varLabel, md, raw).html;
+    }).join('');
+    updateLegend(allRows[0], sharedColor.dMin, sharedColor.dMax, sharedColor.anomDomain);
+  } else {
+    if (S.ridgeIndex >= perCity.length) S.ridgeIndex = perCity.length - 1;
+    if (S.ridgeIndex < 0) S.ridgeIndex = 0;
+    const { city, rows, raw } = perCity[S.ridgeIndex];
+    const xd = getRidgelineXDomain([{ rows, raw }]);
+    const color = getBarChartColorContext([rows], rows);
+    grid.className = 'ridgeline-grid ridgeline-grid--single';
+    grid.innerHTML = buildRidgelineSVG(city, rows, xd, color, varLabel, null, raw).html;
+    updateRidgelineNav(perCity, S.ridgeIndex);
+    updateLegend(rows, color.dMin, color.dMax, color.anomDomain);
+  }
+
+  document.getElementById('legend').style.display = '';
+  overlay.classList.add('visible');
+}
+
 function drawStripesContent(W, H, opts = {}) {
   const ready = S.cities.filter(c => rawCache.has(rawCacheKey(c.id)));
   if (!ready.length) return null;
@@ -1810,11 +2269,20 @@ function drawScene() {
   if (S.chartView === 'bar') {
     hideHoverUI();
     canvas.style.display = 'none';
+    document.getElementById('ridgeline-overlay').classList.remove('visible');
     renderBarCharts();
+    return;
+  }
+  if (S.chartView === 'ridge') {
+    hideHoverUI();
+    canvas.style.display = 'none';
+    document.getElementById('barchart-overlay').classList.remove('visible');
+    renderRidgeline();
     return;
   }
   canvas.style.display = '';
   document.getElementById('barchart-overlay').classList.remove('visible');
+  document.getElementById('ridgeline-overlay').classList.remove('visible');
 
   _renderCtx = ctx;
   const scene = drawStripesContent(W, H);
@@ -1954,7 +2422,7 @@ function showBarChartTooltip(e, barEl) {
 }
 
 canvas.addEventListener('mousemove', e => {
-  if (S.chartView === 'bar') return;
+  if (S.chartView !== 'stripes') return;
   const rect = canvas.getBoundingClientRect();
 
   // In compare mode pick the band (top or bottom) by mouse Y
@@ -2012,6 +2480,56 @@ document.getElementById('barchart-grid').addEventListener('mousemove', e => {
 });
 document.getElementById('barchart-grid').addEventListener('mouseleave', hideHoverUI);
 document.getElementById('barchart-overlay').addEventListener('mouseleave', hideHoverUI);
+
+function showRidgelineTooltip(e, hitEl) {
+  const svg = hitEl.closest('.ridgeline-svg');
+  const cityName = svg?.dataset?.city || '';
+  const yearKey = hitEl.dataset.key || '';
+  const v = parseFloat(hitEl.dataset.v);
+  const anom = parseFloat(hitEl.dataset.anom);
+  const anomSign = anom >= 0 ? '+' : '';
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const rows = `
+      <div class="tooltip__row is-strong">
+        <span>${varLabel}</span><span class="tooltip__value">${Number.isFinite(v) ? v.toFixed(1) : 'n/a'}°</span>
+      </div>
+      ${S.coloring === 'anomaly' ? `<div class="tooltip__row">
+        <span>${t('tooltip_anomaly')}</span><span class="tooltip__value">${Number.isFinite(anom) ? anomSign + anom.toFixed(2) : 'n/a'}°</span>
+      </div>
+      <div class="tooltip__row">
+        <span>${t('tooltip_baseline')}</span><span class="tooltip__value">${S.baselineStart}–${S.baselineEnd}</span>
+      </div>` : ''}`;
+  showHoverTooltip(e, {
+    title: cityName || yearKey,
+    date: cityName ? yearKey : '',
+    rows,
+  });
+}
+
+document.getElementById('ridgeline-prev').addEventListener('click', () => {
+  if (S.chartView !== 'ridge' || S.mode === 'compare') return;
+  if (S.ridgeIndex > 0) {
+    S.ridgeIndex--;
+    renderRidgeline();
+  }
+});
+document.getElementById('ridgeline-next').addEventListener('click', () => {
+  if (S.chartView !== 'ridge' || S.mode === 'compare') return;
+  const n = getRidgelineCities().length;
+  if (S.ridgeIndex < n - 1) {
+    S.ridgeIndex++;
+    renderRidgeline();
+  }
+});
+
+document.getElementById('ridgeline-grid').addEventListener('mousemove', e => {
+  if (S.chartView !== 'ridge') return;
+  const hit = e.target.closest('.ridgeline-row-hit');
+  if (!hit) { hideHoverUI(); return; }
+  showRidgelineTooltip(e, hit);
+});
+document.getElementById('ridgeline-grid').addEventListener('mouseleave', hideHoverUI);
+document.getElementById('ridgeline-overlay').addEventListener('mouseleave', hideHoverUI);
 
 // ─── City search UI ────────────────────────────────────────────────────────
 let searchTimer = null;
@@ -2240,6 +2758,26 @@ function invalidateSeriesCache(cityId) {
 }
 
 // ─── Segmented controls ────────────────────────────────────────────────────
+function updateGranularitySegLock() {
+  const seg = document.getElementById('gran-seg');
+  if (!seg) return;
+  const ridge = S.chartView === 'ridge';
+  seg.querySelectorAll('.seg__btn').forEach(btn => {
+    const allowed = !ridge || RIDGE_ALLOWED_GRANULARITIES.has(btn.dataset.val);
+    btn.classList.toggle('is-locked', !allowed);
+    btn.setAttribute('aria-disabled', allowed ? 'false' : 'true');
+  });
+  if (ridge && !RIDGE_ALLOWED_GRANULARITIES.has(S.granularity)) {
+    S.granularity = 'yearly';
+    seg.querySelectorAll('.seg__btn').forEach(b => {
+      b.classList.toggle('is-on', b.dataset.val === 'yearly');
+    });
+    document.getElementById('range-multi').style.display = '';
+    document.getElementById('range-single').style.display = 'none';
+    clearSeriesCache();
+  }
+}
+
 function makeSeg(id, stateKey, onChange) {
   const seg = document.getElementById(id);
   seg.querySelectorAll('.seg__btn').forEach(btn => {
@@ -2306,7 +2844,11 @@ makeSeg('color-seg', 'coloring', v => {
   drawScene();
 });
 makeSeg('scale-seg', 'sharedScale', v => { S.sharedScale = v==='shared'; drawScene(); });
-makeSeg('chartview-seg', 'chartView', () => drawScene());
+makeSeg('chartview-seg', 'chartView', () => {
+  updateGranularitySegLock();
+  drawScene();
+});
+updateGranularitySegLock();
 
 function clearSeriesCache() { seriesCache.clear(); }
 
@@ -2384,6 +2926,7 @@ function togglePanel() {
   document.getElementById('show-hint').classList.toggle('visible', !S.panelVisible);
   updatePresentTitle();
   if (S.chartView === 'bar') layoutBarchartOverlay();
+  else if (S.chartView === 'ridge') layoutRidgelineOverlay();
 }
 window.togglePanel = togglePanel;
 
@@ -2660,7 +3203,7 @@ function roundRectFillStroke(targetCtx, x, y, w, h, r) {
 
 function exportBaseName() {
   const city = S.cities[0]?.name || 'export';
-  return `warming-stripes-${city.replace(/[^\w\-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'export'}`;
+  return `warming-in-colour-${city.replace(/[^\w\-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'export'}`;
 }
 
 function exportStripesPNG() {
@@ -2954,6 +3497,146 @@ async function exportBarChartsPNG() {
   triggerDownload(c.toDataURL('image/png'), `${exportBaseName()}.png`);
 }
 
+// Ridgeline SVG/PNG export — same panel-card composition as the bar chart
+// export, with the ridgeline SVG nested inside instead.
+function exportRidgelineSVG() {
+  const perCity = getRidgelineCities();
+  if (!perCity.length) return;
+
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const isCompare = S.mode === 'compare';
+  const citiesToExport = isCompare
+    ? perCity.slice(0, 4)
+    : [perCity[Math.min(Math.max(S.ridgeIndex, 0), perCity.length - 1)]];
+
+  const allRows = isCompare ? citiesToExport.map(d => d.rows) : null;
+  const sharedColor = allRows?.length ? getBarChartColorContext(allRows, allRows[0]) : null;
+  const sharedX = (isCompare && S.sharedScale && citiesToExport.length) ? getRidgelineXDomain(citiesToExport) : null;
+  const sharedDensity = sharedX ? sharedRidgeMaxDensity(citiesToExport, sharedX) : null;
+
+  const PANEL_W = 660, PAD = 12, HEADER = 48;
+  const CHART_W = PANEL_W - PAD * 2;
+  const CHART_H = Math.round(CHART_W * RIDGE_SVG_H / RIDGE_SVG_W);
+  const PANEL_H = HEADER + CHART_H + PAD;
+  const GAP = 10, MARGIN = 24;
+  const cols = citiesToExport.length;
+  const exportW = MARGIN * 2 + cols * PANEL_W + Math.max(0, cols - 1) * GAP;
+  const exportH = MARGIN * 2 + PANEL_H;
+
+  let body = `<rect x="0" y="0" width="${exportW}" height="${exportH}" fill="${cssVar('--bg', '#0b0b0c')}"/>`;
+
+  for (let i = 0; i < citiesToExport.length; i++) {
+    const { city, rows, raw } = citiesToExport[i];
+    const xd = sharedX || getRidgelineXDomain([{ rows, raw }]);
+    const color = (isCompare && S.sharedScale && sharedColor) ? sharedColor : getBarChartColorContext([rows], rows);
+    const md = (isCompare && S.sharedScale) ? sharedDensity : null;
+
+    const { html } = buildRidgelineSVG(city, rows, xd, color, varLabel, md, raw);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.ridgeline-panel__title').textContent;
+    const subtitle = panel.querySelector('.ridgeline-panel__subtitle').textContent;
+    let inner = inlineSvgVars(new XMLSerializer().serializeToString(panel.querySelector('svg')));
+
+    const px = MARGIN + i * (PANEL_W + GAP);
+    const py = MARGIN;
+
+    inner = inner.replace(/^<svg[^>]*>/,
+      `<svg x="${px + PAD}" y="${py + HEADER}" width="${CHART_W}" height="${CHART_H}" viewBox="0 0 ${RIDGE_SVG_W} ${RIDGE_SVG_H}" preserveAspectRatio="xMidYMid meet" font-family='${EXPORT_FONT_SANS}'>`);
+
+    body += `<rect x="${px}" y="${py}" width="${PANEL_W}" height="${PANEL_H}" rx="3" fill="${cssVar('--panel-bg', 'rgba(14,14,15,.9)')}" stroke="${cssVar('--rule', 'rgba(236,230,216,.16)')}" stroke-width="1"/>`;
+    body += `<text x="${px + PAD}" y="${py + 22}" font-family='${EXPORT_FONT_SERIF}' font-weight="800" font-size="19" fill="${cssVar('--ink', '#ece6d8')}">${escapeHtml(title)}</text>`;
+    body += `<text x="${px + PAD}" y="${py + 38}" font-weight="500" font-size="10.5" fill="${cssVar('--text-dim', 'rgba(236,230,216,.6)')}">${escapeHtml(subtitle)}</text>`;
+    body += inner;
+  }
+
+  const titleCity = citiesToExport[0]?.city?.name || S.cities[0]?.name || '';
+  body += presentTitleSVG(exportW, exportH, titleCity);
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${exportW}" height="${exportH}" viewBox="0 0 ${exportW} ${exportH}" font-family='${EXPORT_FONT_SANS}'>${body}</svg>`;
+  triggerDownloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${exportBaseName()}.svg`);
+}
+
+async function exportRidgelinePNG() {
+  const perCity = getRidgelineCities();
+  if (!perCity.length) return;
+
+  const varLabel = {'mean':t('var_mean'),'max':t('var_max'),'min':t('var_min')}[S.variable];
+  const isCompare = S.mode === 'compare';
+  const citiesToExport = isCompare
+    ? perCity.slice(0, 4)
+    : [perCity[Math.min(Math.max(S.ridgeIndex, 0), perCity.length - 1)]];
+
+  const allRows = isCompare ? citiesToExport.map(d => d.rows) : null;
+  const sharedColor = allRows?.length ? getBarChartColorContext(allRows, allRows[0]) : null;
+  const sharedX = (isCompare && S.sharedScale && citiesToExport.length) ? getRidgelineXDomain(citiesToExport) : null;
+  const sharedDensity = sharedX ? sharedRidgeMaxDensity(citiesToExport, sharedX) : null;
+
+  const PANEL_W = 660;
+  const PAD = 12;
+  const HEADER = 48;
+  const CHART_W = PANEL_W - PAD * 2;
+  const CHART_H = Math.round(CHART_W * RIDGE_SVG_H / RIDGE_SVG_W);
+  const PANEL_H = HEADER + CHART_H + PAD;
+  const GAP = 10;
+  const MARGIN = 24;
+  const cols = citiesToExport.length;
+  const exportW = MARGIN * 2 + cols * PANEL_W + Math.max(0, cols - 1) * GAP;
+  const exportH = MARGIN * 2 + PANEL_H;
+  const dpr = 2;
+
+  const c = document.createElement('canvas');
+  c.width = exportW * dpr;
+  c.height = exportH * dpr;
+  const x = c.getContext('2d');
+  x.scale(dpr, dpr);
+  x.fillStyle = cssVar('--bg', '#0b0b0c');
+  x.fillRect(0, 0, exportW, exportH);
+
+  for (let i = 0; i < citiesToExport.length; i++) {
+    const { city, rows, raw } = citiesToExport[i];
+    const xd = sharedX || getRidgelineXDomain([{ rows, raw }]);
+    const color = (isCompare && S.sharedScale && sharedColor) ? sharedColor : getBarChartColorContext([rows], rows);
+    const md = (isCompare && S.sharedScale) ? sharedDensity : null;
+
+    const { html } = buildRidgelineSVG(city, rows, xd, color, varLabel, md, raw);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.ridgeline-panel__title').textContent;
+    const subtitle = panel.querySelector('.ridgeline-panel__subtitle').textContent;
+    const svgMarkup = new XMLSerializer().serializeToString(panel.querySelector('svg'));
+
+    const px = MARGIN + i * (PANEL_W + GAP);
+    const py = MARGIN;
+
+    x.fillStyle = cssVar('--panel-bg', 'rgba(14,14,15,.9)');
+    x.strokeStyle = cssVar('--rule', 'rgba(236,230,216,.16)');
+    x.lineWidth = 1;
+    roundRectFillStroke(x, px, py, PANEL_W, PANEL_H, 3);
+
+    x.fillStyle = cssVar('--ink', '#ece6d8');
+    x.font = '800 19px "Playfair Display", Georgia, serif';
+    x.fillText(title, px + PAD, py + 22);
+    x.fillStyle = cssVar('--text-dim', 'rgba(236,230,216,.6)');
+    x.font = '500 10.5px Inter, sans-serif';
+    x.fillText(subtitle, px + PAD, py + 38);
+
+    try {
+      const chartImg = await loadSvgToCanvas(svgMarkup, CHART_W, CHART_H);
+      x.drawImage(chartImg, px + PAD, py + HEADER, CHART_W, CHART_H);
+    } catch (err) {
+      console.error('Ridgeline export failed', err);
+    }
+  }
+
+  const titleCity = citiesToExport[0]?.city?.name || S.cities[0]?.name || '';
+  drawPresentTitleOnCanvas(x, exportW, exportH, titleCity);
+
+  triggerDownload(c.toDataURL('image/png'), `${exportBaseName()}.png`);
+}
+
 async function exportBarChartsGIF() {
   const perCity = getBarChartCities();
   if (!perCity.length) return;
@@ -3049,6 +3732,7 @@ async function exportBarChartsGIF() {
 document.getElementById('export-png-btn').addEventListener('click', async () => {
   await ensureExportFonts();
   if (S.chartView === 'bar') exportBarChartsPNG();
+  else if (S.chartView === 'ridge') exportRidgelinePNG();
   else exportStripesPNG();
 });
 
@@ -3061,6 +3745,7 @@ document.getElementById('export-gif-btn').addEventListener('click', async () => 
 document.getElementById('export-svg-btn').addEventListener('click', async () => {
   await ensureExportFonts();
   if (S.chartView === 'bar') exportBarChartsSVG();
+  else if (S.chartView === 'ridge') exportRidgelineSVG();
   else exportStripesSVG();
 });
 

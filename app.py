@@ -168,18 +168,44 @@ def _ensure_static_server() -> None:
 import os
 import streamlit.components.v1 as components
 
-# Only start the local API server when actually running locally. On Streamlit
-# Cloud (or any host where the browser and the Python process are different
-# machines), "localhost" in the browser means the VISITOR'S machine, not the
-# server -- so an <iframe src="http://localhost:PORT"> can never resolve
-# there. Set WARMINGSTRIPES_LOCAL=1 in your local shell to enable it.
-_RUNNING_LOCALLY = os.environ.get("WARMINGSTRIPES_LOCAL") == "1"
+
+def _era5_data_present() -> bool:
+    """True if the local ERA5 parquet store exists and has at least one file.
+    This is the real 'data is available locally' signal: the ~150 MB store is
+    only ever present on a local dev machine, never on Streamlit Cloud (too
+    large to deploy), so it doubles as a reliable local-vs-cloud detector."""
+    try:
+        return _ERA5_DIR.is_dir() and next(_ERA5_DIR.glob("*.parquet"), None) is not None
+    except OSError:
+        return False
+
+
+# Decide whether to serve the local ERA5 API. When it's on, Italian cities read
+# straight from the pre-downloaded parquets and make NO Open-Meteo calls at all.
+#
+# On Streamlit Cloud (or any host where the browser and the Python process are
+# different machines) "localhost" in the browser is the VISITOR'S machine, so a
+# fetch to http://localhost:PORT can never reach the server -- there we must
+# stay off and let the page use Open-Meteo.
+#
+# Gate: WARMINGSTRIPES_LOCAL=1 forces it on, =0 forces it off; when unset we
+# auto-enable it whenever the ERA5 parquet store is present on disk (i.e. a
+# local run with data available). This makes local data the default without any
+# extra flag, while Cloud -- where the store isn't deployed -- stays untouched.
+_LOCAL_ENV = os.environ.get("WARMINGSTRIPES_LOCAL")
+if _LOCAL_ENV in ("0", "false", "False"):
+    _RUNNING_LOCALLY = False
+elif _LOCAL_ENV in ("1", "true", "True"):
+    _RUNNING_LOCALLY = True
+else:
+    _RUNNING_LOCALLY = _era5_data_present()
+
 if _RUNNING_LOCALLY:
     _ensure_static_server()
 
 # ── Streamlit page ────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="EETRA Warming Stripes",
+    page_title="Warming in Colour",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -203,4 +229,12 @@ iframe { position:fixed!important; top:0!important; left:0!important;
 # back to Open-Meteo automatically if that route 404s, so nothing else here
 # needs to change.
 _html_content = (_PAGES_DIR / "_thermachrome.html").read_text(encoding="utf-8")
+if _RUNNING_LOCALLY:
+    # window.location.origin inside a srcdoc iframe resolves to Streamlit's own
+    # origin, not the static API server -- tell the page's JS where it really is.
+    _html_content = _html_content.replace(
+        "</head>",
+        f'<script>window.__LOCAL_API_BASE__ = "http://localhost:{_STATIC_PORT}";</script></head>',
+        1,
+    )
 components.html(_html_content, height=1000, scrolling=False)
