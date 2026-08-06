@@ -13,6 +13,8 @@
   --text-faint:rgba(236,230,216,.36); --rule:rgba(236,230,216,.16);
   --rule-soft:rgba(236,230,216,.08); --hover:rgba(236,230,216,.08);
   --accent:#c0473c; --radius:3px;
+  --panel-w:336px;
+  --panel-edge:374px;
   --font-serif:"Playfair Display",Georgia,serif;
   --font-sans:"Inter",ui-sans-serif,system-ui,sans-serif;
   --spectrum:linear-gradient(90deg,#053061,#2166ac,#4393c3,#92c5de,#d1e5f0,#f7f7f7,#fddbc7,#f4a582,#d6604d,#b2182b,#67001f);
@@ -46,7 +48,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-sans);
 .stripes-canvas { position:fixed; top:0; right:0; bottom:0; left:0;
                   display:block; width:100vw; height:100vh }
 /* Panel */
-.panel { position:fixed; top:18px; left:18px; bottom:18px; width:316px;
+.panel { position:fixed; top:18px; left:18px; bottom:18px; width:var(--panel-w);
          display:flex; flex-direction:column; padding:22px 22px 12px;
          background:var(--panel-bg); border:1px solid var(--rule);
          border-radius:var(--radius); backdrop-filter:blur(16px) saturate(1.05);
@@ -195,13 +197,13 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
 .legend__ticks { display:flex; justify-content:space-between; font-size:10.5px;
                  color:var(--text-dim); font-variant-numeric:tabular-nums }
 /* Bar chart view — Ed Hawkins-style anomaly bar charts, one panel per city */
-.barchart-overlay { position:fixed; top:0; right:0; bottom:0; left:354px; z-index:6;
+.barchart-overlay { position:fixed; top:0; right:0; bottom:0; left:var(--panel-edge); z-index:6;
                      display:none; align-items:center; justify-content:center;
                      transition:left .2s; pointer-events:none; overflow:auto;
                      padding:8px 10px; box-sizing:border-box }
 .barchart-overlay.visible { display:flex; pointer-events:auto }
 .barchart-shell { display:flex; flex-direction:column; align-items:center; gap:14px;
-                  width:min(98%, calc(100vw - var(--barchart-left, 354px) - 20px));
+                  width:min(98%, calc(100vw - var(--barchart-left, var(--panel-edge)) - 20px));
                   max-height:88vh }
 .barchart-nav { display:flex; align-items:center; justify-content:center; gap:18px;
                 flex:none; user-select:none }
@@ -236,13 +238,13 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
 .barchart-bar-hit { cursor:crosshair; fill:transparent; stroke:none; }
 .barchart-bar-vis { pointer-events:none; }
 /* Ridgeline view — one overlapping-density panel per city, ridge per year */
-.ridgeline-overlay { position:fixed; top:0; right:0; bottom:0; left:354px; z-index:6;
+.ridgeline-overlay { position:fixed; top:0; right:0; bottom:0; left:var(--panel-edge); z-index:6;
                      display:none; align-items:center; justify-content:center;
                      transition:left .2s; pointer-events:none; overflow:auto;
                      padding:8px 10px; box-sizing:border-box }
 .ridgeline-overlay.visible { display:flex; pointer-events:auto }
 .ridgeline-shell { display:flex; flex-direction:column; align-items:center; gap:14px;
-                  width:min(98%, calc(100vw - var(--ridgeline-left, 354px) - 20px));
+                  width:min(98%, calc(100vw - var(--ridgeline-left, var(--panel-edge)) - 20px));
                   max-height:88vh }
 .ridgeline-nav { display:flex; align-items:center; justify-content:center; gap:18px;
                 flex:none; user-select:none }
@@ -275,6 +277,86 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
                 aspect-ratio:780 / 744; max-height:82vh }
 .ridgeline-row { pointer-events:none; }
 .ridgeline-row-hit { cursor:crosshair; fill:transparent; stroke:none; }
+/* Radial view — one polar "daily min-max" wheel per city, Jun-Jul-Aug */
+.radial-overlay { position:fixed; top:0; right:0; bottom:0; left:var(--panel-edge); z-index:6;
+                     display:none; align-items:center; justify-content:center;
+                     transition:left .2s; pointer-events:none; overflow:auto;
+                     padding:8px 10px; box-sizing:border-box }
+.radial-overlay.visible { display:flex; pointer-events:auto }
+.radial-shell { display:flex; flex-direction:column; align-items:center; gap:14px;
+                  width:min(98%, calc(100vw - var(--radial-left, var(--panel-edge)) - 20px));
+                  max-height:88vh }
+.radial-nav { display:flex; align-items:center; justify-content:center; gap:18px;
+                flex:none; user-select:none }
+.radial-nav[hidden] { display:none !important }
+.radial-nav__btn { width:36px; height:36px; border-radius:var(--radius);
+                     border:1px solid var(--rule); background:var(--surface);
+                     color:var(--ink); font-size:22px; line-height:1; cursor:pointer;
+                     font-family:var(--font-serif); transition:border-color .14s,color .14s,opacity .14s }
+.radial-nav__btn:hover:not(:disabled) { border-color:var(--ink) }
+.radial-nav__btn:disabled { opacity:.28; cursor:default }
+.radial-nav__label { min-width:220px; text-align:center; font-size:11.5px; font-weight:600;
+                       letter-spacing:.06em; text-transform:uppercase; color:var(--text-dim) }
+.radial-grid { display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+                   align-items:stretch; width:100%; height:auto }
+.radial-grid--1 { max-width:890px }
+.radial-grid--2 { max-width:1690px }
+.radial-grid--3 { max-width:2260px }
+.radial-grid--4 { max-width:2720px }
+.radial-grid--single { max-width:890px; flex-wrap:nowrap; justify-content:center }
+.radial-panel { flex:1 1 401px; max-width:660px; min-width:372px; display:flex; flex-direction:column;
+                   background:var(--panel-bg); border:1px solid var(--rule);
+                   border-radius:var(--radius); padding:10px 12px 6px;
+                   box-shadow:var(--frame-shadow);
+                   backdrop-filter:blur(16px) saturate(1.05) }
+.radial-panel__title { margin:0 0 1px; font-family:var(--font-serif);
+                          font-size:19px; font-weight:800; color:var(--ink) }
+.radial-panel__subtitle { margin:0 0 6px; font-size:10.5px; color:var(--text-dim);
+                             letter-spacing:.02em }
+.radial-svg { display:block; width:100%; max-width:100%; height:auto; margin:0 auto;
+                aspect-ratio:780 / 800; max-height:82vh }
+.radial-day { pointer-events:none; }
+.radial-day-hit { cursor:crosshair; fill:transparent; stroke:none; }
+/* Curves view — year-vs-climate-normal ribbon (Thermachrome Curve mode) */
+.curves-overlay { position:fixed; top:0; right:0; bottom:0; left:var(--panel-edge); z-index:6;
+                     display:none; align-items:center; justify-content:center;
+                     transition:left .2s; pointer-events:none; overflow:auto;
+                     padding:8px 10px; box-sizing:border-box }
+.curves-overlay.visible { display:flex; pointer-events:auto }
+.curves-shell { display:flex; flex-direction:column; align-items:center; gap:14px;
+                  width:min(98%, calc(100vw - var(--curves-left, var(--panel-edge)) - 20px));
+                  max-height:88vh }
+.curves-nav { display:flex; align-items:center; justify-content:center; gap:18px;
+                flex:none; user-select:none }
+.curves-nav[hidden] { display:none !important }
+.curves-nav__btn { width:36px; height:36px; border-radius:var(--radius);
+                     border:1px solid var(--rule); background:var(--surface);
+                     color:var(--ink); font-size:22px; line-height:1; cursor:pointer;
+                     font-family:var(--font-serif); transition:border-color .14s,color .14s,opacity .14s }
+.curves-nav__btn:hover:not(:disabled) { border-color:var(--ink) }
+.curves-nav__btn:disabled { opacity:.28; cursor:default }
+.curves-nav__label { min-width:220px; text-align:center; font-size:11.5px; font-weight:600;
+                       letter-spacing:.06em; text-transform:uppercase; color:var(--text-dim) }
+.curves-grid { display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+                   align-items:stretch; width:100%; height:auto }
+.curves-grid--1 { max-width:1100px }
+.curves-grid--2 { max-width:1800px }
+.curves-grid--3 { max-width:2400px }
+.curves-grid--4 { max-width:2800px }
+.curves-grid--single { max-width:1100px; flex-wrap:nowrap; justify-content:center }
+.curves-panel { flex:1 1 520px; max-width:1040px; min-width:420px; display:flex; flex-direction:column;
+                   background:var(--panel-bg); border:1px solid var(--rule);
+                   border-radius:var(--radius); padding:10px 12px 6px;
+                   box-shadow:var(--frame-shadow);
+                   backdrop-filter:blur(16px) saturate(1.05) }
+.curves-panel__title { margin:0 0 1px; font-family:var(--font-serif);
+                          font-size:19px; font-weight:800; color:var(--ink) }
+.curves-panel__subtitle { margin:0 0 6px; font-size:10.5px; color:var(--text-dim);
+                             letter-spacing:.02em }
+.curves-svg { display:block; width:100%; max-width:100%; height:auto; margin:0 auto;
+                aspect-ratio:980 / 520; max-height:82vh }
+.curves-hit { cursor:crosshair; fill:transparent; stroke:none; }
+.curves-ribbon, .curves-line, .curves-annot { pointer-events:none; }
 /* Hover guide line — tracks the pointer across the full stripe height */
 .hover-line { position:fixed; top:0; height:100vh; width:1px;
               background:rgba(255,255,255,.7); pointer-events:none;
@@ -369,7 +451,8 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
 .info-hint:hover { border-color:var(--ink); color:var(--ink) }
 .info-hint__pop { position:absolute; left:50%; transform:translateX(-50%); bottom:calc(100% + 8px);
                    width:180px; padding:8px 10px; background:var(--surface); border:1px solid var(--rule);
-                   border-radius:var(--radius); font-size:10.5px; line-height:1.4; color:var(--text-dim);
+                   border-radius:var(--radius); font-family:var(--font-sans); font-size:10.5px;
+                   font-weight:400; line-height:1.4; color:var(--text-dim);
                    box-shadow:var(--frame-shadow-md); display:none; z-index:50;
                    text-align:left; font-style:normal; text-transform:none; letter-spacing:normal }
 .info-hint:hover .info-hint__pop { display:block }
@@ -414,7 +497,7 @@ kbd { font-family:var(--font-sans); font-size:9px; padding:1px 4px; border-radiu
   pointer-events:auto;
 }
 .app:has(.panel:not(.hidden)) .thermachrome-credit {
-  max-width:calc(100vw - 354px);
+  max-width:calc(100vw - var(--panel-edge));
 }
 .app:has(.overlay--welcome:not(.hidden)) .thermachrome-credit {
   visibility:hidden; pointer-events:none;
@@ -541,7 +624,7 @@ html[data-theme=paper] .thermachrome-credit {
       </div>
     </section>
 
-    <!-- 06 Baseline (anomaly only) -->
+    <!-- 06 Baseline (anomaly, or radial absolute for climate-normal line) -->
     <section class="section" id="baseline-section">
       <h2 class="section__label" data-i18n="section_baseline">Baseline</h2>
       <div class="field-row">
@@ -616,9 +699,11 @@ html[data-theme=paper] .thermachrome-credit {
         <span class="info-hint">i<span class="info-hint__pop" data-i18n="chartview_info">Bar chart shows all cities in list 01, side by side, yearly anomaly, shared axis &amp; colour scale.</span></span>
       </h2>
       <div class="seg" id="chartview-seg">
-        <button class="seg__btn is-on" data-val="stripes" data-i18n="seg_stripes">Stripes</button>
-        <button class="seg__btn" data-val="bar" data-i18n="seg_bar">Bar Chart</button>
-        <button class="seg__btn" data-val="ridge" data-i18n="seg_ridge">Ridgeline</button>
+        <button class="seg__btn is-on" data-val="stripes" data-i18n="seg_stripes">stripes</button>
+        <button class="seg__btn" data-val="bar" data-i18n="seg_bar">bars</button>
+        <button class="seg__btn" data-val="radial" data-i18n="seg_radial">radial</button>
+        <button class="seg__btn" data-val="curves" data-i18n="seg_curves">curves</button>
+        <button class="seg__btn" data-val="ridge" data-i18n="seg_ridge">ridgeline</button>
       </div>
     </section>
 
@@ -777,6 +862,28 @@ html[data-theme=paper] .thermachrome-credit {
       <div class="ridgeline-grid" id="ridgeline-grid"></div>
     </div>
   </div>
+
+  <div class="radial-overlay" id="radial-overlay">
+    <div class="radial-shell">
+      <div class="radial-nav" id="radial-nav" hidden>
+        <button type="button" class="radial-nav__btn" id="radial-prev" data-i18n-attr="aria-label:aria_prev_city" aria-label="Previous city">&#8249;</button>
+        <span class="radial-nav__label" id="radial-nav-label"></span>
+        <button type="button" class="radial-nav__btn" id="radial-next" data-i18n-attr="aria-label:aria_next_city" aria-label="Next city">&#8250;</button>
+      </div>
+      <div class="radial-grid" id="radial-grid"></div>
+    </div>
+  </div>
+
+  <div class="curves-overlay" id="curves-overlay">
+    <div class="curves-shell">
+      <div class="curves-nav" id="curves-nav" hidden>
+        <button type="button" class="curves-nav__btn" id="curves-prev" data-i18n-attr="aria-label:aria_prev_city" aria-label="Previous city">&#8249;</button>
+        <span class="curves-nav__label" id="curves-nav-label"></span>
+        <button type="button" class="curves-nav__btn" id="curves-next" data-i18n-attr="aria-label:aria_next_city" aria-label="Next city">&#8250;</button>
+      </div>
+      <div class="curves-grid" id="curves-grid"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -799,11 +906,19 @@ const S = {
   compareB: null,
   panelVisible: true,
   model: 'era5_land',  // era5_land | era5 | cerra | ecmwf_ifs
-  chartView: 'stripes', // stripes | bar | ridge
+  chartView: 'stripes', // stripes | bar | radial | curves | ridge
   barIndex: 0,           // single/collage bar-chart carousel index
   ridgeIndex: 0,         // single/collage ridgeline carousel index
+  radialIndex: 0,        // single/collage radial carousel index
+  curvesIndex: 0,        // single curves carousel index
   lang: 'en',            // en | it — UI language
 };
+
+function panelEdgeLeft() {
+  if (!S.panelVisible) return 0;
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--panel-edge').trim();
+  return parseFloat(v) || 374;
+}
 
 // ─── i18n ───────────────────────────────────────────────────────────────────
 const I18N = {
@@ -826,7 +941,7 @@ const I18N = {
     section_export: 'Export',
     section_colors: 'Colors',
     section_language: 'Language',
-    chartview_info: 'Bar chart shows all cities in list 01, side by side, yearly anomaly, shared axis &amp; colour scale. Ridgeline shows one overlapping density curve per year, revealing how the daily distribution has shifted.',
+    chartview_info: 'Bar chart shows all cities in list 01, side by side, yearly anomaly, shared axis &amp; colour scale. Radial shows one wedge per day of the summer (01 Jun – 31 Aug of the selected year), running from that day&#39;s minimum to its maximum. Curves plots one year of daily temperature against the climate normal (median + K=4 harmonic), with a ribbon coloured by anomaly. Ridgeline shows one overlapping density curve per year, revealing how the daily distribution has shifted.',
     baseline_period_label: 'Period',
     baseline_period_info: 'WMO/Copernicus standard normal',
     range_years_label: 'Years',
@@ -835,9 +950,11 @@ const I18N = {
     compare_scale_label: 'Scale',
     seg_shared: 'Shared',
     seg_indep: 'Indep.',
-    seg_stripes: 'Stripes',
-    seg_bar: 'Bar Chart',
-    seg_ridge: 'Ridgeline',
+    seg_stripes: 'stripes',
+    seg_bar: 'bars',
+    seg_ridge: 'ridgeline',
+    seg_radial: 'radial',
+    seg_curves: 'curves',
     theme_dark: 'Dark',
     theme_paper: 'Paper',
     export_png: 'PNG',
@@ -864,6 +981,16 @@ const I18N = {
     var_max: 'Maximum',
     color_anomaly: 'Anomaly',
     color_absolute: 'Absolute',
+    curves_subtitle: 'Daily {v} vs {start}–{end} normal · {year}',
+    curves_hint: 'Daily temperature vs the climate normal. Red above normal, blue below.',
+    curves_legend_normal: 'normal',
+    curves_legend_p95: 'P95',
+    curves_legend_p5: 'P5',
+    curves_peak: 'Peak anomaly',
+    curves_method: 'normal {start}–{end} · median · K=4 harmonic',
+    curves_tooltip_temp: 'Temperature',
+    curves_tooltip_normal: 'Normal',
+    curves_tooltip_anomaly: 'Anomaly',
     show_panel_hint: '&#9654; Show panel',
     present_title_kicker: 'Warming in Colour',
     info_modal_title: 'Data &amp; Method',
@@ -919,6 +1046,14 @@ const I18N = {
     ridge_subtitle_anomaly: 'Daily {v} distribution, one ridge per year, coloured by annual anomaly vs {start}–{end}',
     ridge_subtitle_abs: 'Daily {v} distribution, one ridge per year',
     ridge_subtitle_monthly: 'Daily {v} distribution per month, {year}',
+    radial_subtitle: 'Daily min–max temperature · 01 Jun – 31 Aug {year} · {days} days',
+    radial_subtitle_anomaly: 'Daily min–max · {v} anomaly vs {start}–{end} · 01 Jun – 31 Aug {year}',
+    radial_legend_temp: 'Min–max temperature',
+    radial_legend_baseline: 'Baseline {start}–{end}',
+    radial_legend_weekend: 'Weekend',
+    radial_tooltip_range: 'Min – max',
+    radial_tooltip_baseline: 'Baseline',
+    radial_tooltip_anomaly: 'Anomaly',
     date_week_of: 'Week of {date} (WK {wk})',
     month_abbr: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
     month_full: ['january','february','march','april','may','june','july','august','september','october','november','december'],
@@ -943,7 +1078,7 @@ const I18N = {
     section_export: 'Esporta',
     section_colors: 'Colori',
     section_language: 'Lingua',
-    chartview_info: 'Il grafico a barre mostra tutte le città nell\'elenco 01, affiancate, anomalia annuale, asse e scala colore condivisi. Il ridgeline mostra una curva di densità sovrapposta per ogni anno, rivelando come è cambiata la distribuzione giornaliera.',
+    chartview_info: 'Il grafico a barre mostra tutte le città nell\'elenco 01, affiancate, anomalia annuale, asse e scala colore condivisi. Il radiale mostra uno spicchio per ogni giorno d\'estate (01 giu – 31 ago dell\'anno selezionato), dalla minima alla massima di quel giorno. Le curve confrontano un anno di temperatura giornaliera con la normale climatica (mediana + armonica K=4), con un nastro colorato per anomalia. Il ridgeline mostra una curva di densità sovrapposta per ogni anno, rivelando come è cambiata la distribuzione giornaliera.',
     baseline_period_label: 'Periodo',
     baseline_period_info: 'Normale climatologica standard OMM/Copernicus',
     range_years_label: 'Anni',
@@ -952,9 +1087,11 @@ const I18N = {
     compare_scale_label: 'Scala',
     seg_shared: 'Condivisa',
     seg_indep: 'Indip.',
-    seg_stripes: 'Strisce',
-    seg_bar: 'Grafico a barre',
-    seg_ridge: 'Ridgeline',
+    seg_stripes: 'stripes',
+    seg_bar: 'bars',
+    seg_ridge: 'ridgeline',
+    seg_radial: 'radial',
+    seg_curves: 'curves',
     theme_dark: 'Scuro',
     theme_paper: 'Chiaro',
     export_png: 'PNG',
@@ -981,6 +1118,16 @@ const I18N = {
     var_max: 'Massima',
     color_anomaly: 'Anomalia',
     color_absolute: 'Assoluta',
+    curves_subtitle: '{v} giornaliera vs normale {start}–{end} · {year}',
+    curves_hint: 'Temperatura giornaliera rispetto alla normale climatica. Rosso sopra la normale, blu sotto.',
+    curves_legend_normal: 'normale',
+    curves_legend_p95: 'P95',
+    curves_legend_p5: 'P5',
+    curves_peak: 'Picco anomalia',
+    curves_method: 'normale {start}–{end} · mediana · armonica K=4',
+    curves_tooltip_temp: 'Temperatura',
+    curves_tooltip_normal: 'Normale',
+    curves_tooltip_anomaly: 'Anomalia',
     show_panel_hint: '&#9654; Mostra pannello',
     present_title_kicker: 'Warming in Colour',
     info_modal_title: 'Dati e metodo',
@@ -1036,6 +1183,14 @@ const I18N = {
     ridge_subtitle_anomaly: 'Distribuzione giornaliera di {v}, una cresta per anno, colorata in base all\'anomalia annuale vs {start}–{end}',
     ridge_subtitle_abs: 'Distribuzione giornaliera di {v}, una cresta per anno',
     ridge_subtitle_monthly: 'Distribuzione giornaliera di {v} per mese, {year}',
+    radial_subtitle: 'Temperatura minima–massima giornaliera · 01 giu – 31 ago {year} · {days} giorni',
+    radial_subtitle_anomaly: 'Min–max giornaliera · anomalia {v} vs {start}–{end} · 01 giu – 31 ago {year}',
+    radial_legend_temp: 'Temperatura min–max',
+    radial_legend_baseline: 'Riferimento {start}–{end}',
+    radial_legend_weekend: 'Fine settimana',
+    radial_tooltip_range: 'Min – max',
+    radial_tooltip_baseline: 'Riferimento',
+    radial_tooltip_anomaly: 'Anomalia',
     date_week_of: 'Settimana del {date} (SETT {wk})',
     month_abbr: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
     month_full: ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'],
@@ -1743,7 +1898,7 @@ function buildBarChartSVG(city, stats, scales, varLabel, barLimit) {
 }
 
 function layoutBarchartOverlay() {
-  const left = S.panelVisible ? 354 : 0;
+  const left = panelEdgeLeft();
   document.getElementById('barchart-overlay').style.left = left + 'px';
   document.documentElement.style.setProperty('--barchart-left', left + 'px');
 }
@@ -2099,7 +2254,7 @@ function sharedRidgeMaxDensity(cityEntries, xDomain) {
 }
 
 function layoutRidgelineOverlay() {
-  const left = S.panelVisible ? 354 : 0;
+  const left = panelEdgeLeft();
   document.getElementById('ridgeline-overlay').style.left = left + 'px';
   document.documentElement.style.setProperty('--ridgeline-left', left + 'px');
 }
@@ -2165,6 +2320,692 @@ function renderRidgeline() {
   }
 
   document.getElementById('legend').style.display = '';
+  overlay.classList.add('visible');
+}
+
+// ─── Curves view (Thermachrome "Curve" / ribbon: year vs climate normal) ───
+// One full calendar year of daily temperature for the selected variable,
+// plotted against a climate normal built from the baseline period: per-DOY
+// median (and P5/P95 envelopes), smoothed with a K=4 Fourier harmonic fit.
+// The ribbon between the year curve and the normal is coloured by anomaly
+// using the same RdBu mapping as stripes/bars.
+const CURVE_SVG_W = 980, CURVE_SVG_H = 520;
+const CURVE_DAY_MS = 864e5;
+const CURVE_HARMONIC_K = 4;
+// Leap-year day-of-year offsets (month 0..11) — same calendar as Thermachrome.
+const CURVE_DOY_OFFSETS = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+const CURVE_ALLOWED_GRANULARITIES = new Set(['daily']);
+
+function curveDoy(month0, day) { return CURVE_DOY_OFFSETS[month0] + day; }
+
+function curvePercentile(sorted, p) {
+  if (!sorted.length) return NaN;
+  if (sorted.length === 1) return sorted[0];
+  const pos = (sorted.length - 1) * p;
+  const lo = Math.floor(pos), hi = Math.min(lo + 1, sorted.length - 1);
+  return sorted[lo] + (pos - lo) * (sorted[hi] - sorted[lo]);
+}
+
+function curveHarmonicBasis(doy, K) {
+  const row = [1];
+  for (let u = 1; u <= K; u++) {
+    const a = 2 * Math.PI * u * doy / 366;
+    row.push(Math.cos(a), Math.sin(a));
+  }
+  return row;
+}
+
+// Gaussian elimination on the augmented normal-equation matrix [A|b].
+function curveSolveLinear(A, b) {
+  const n = b.length;
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let piv = c;
+    for (let r = c + 1; r < n; r++) {
+      if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    }
+    if (Math.abs(M[piv][c]) < 1e-9) return null;
+    [M[c], M[piv]] = [M[piv], M[c]];
+    for (let r = 0; r < n; r++) {
+      if (r === c) continue;
+      const f = M[r][c] / M[c][c];
+      for (let g = c; g <= n; g++) M[r][g] -= f * M[c][g];
+    }
+  }
+  return M.map((row, i) => row[n] / row[i]);
+}
+
+function curveSmoothHarmonic(byDoy, K = CURVE_HARMONIC_K) {
+  const dim = 1 + 2 * K;
+  const AtA = Array.from({ length: dim }, () => new Array(dim).fill(0));
+  const Atb = new Array(dim).fill(0);
+  for (let h = 1; h <= 366; h++) {
+    const g = byDoy[h];
+    if (g == null || !Number.isFinite(g)) continue;
+    const m = curveHarmonicBasis(h, K);
+    for (let S = 0; S < dim; S++) {
+      Atb[S] += m[S] * g;
+      for (let y = 0; y < dim; y++) AtA[S][y] += m[S] * m[y];
+    }
+  }
+  const coef = curveSolveLinear(AtA, Atb);
+  if (!coef) return byDoy.slice();
+  const out = new Array(367).fill(null);
+  for (let h = 1; h <= 366; h++) {
+    const m = curveHarmonicBasis(h, K);
+    let sum = 0;
+    for (let S = 0; S < dim; S++) sum += coef[S] * m[S];
+    out[h] = sum;
+  }
+  return out;
+}
+
+function curvePickAnnotations(days) {
+  const gap = 12 * CURVE_DAY_MS;
+  const valid = days.filter(d => d.value != null && d.anomaly != null);
+  const take = (arr, n) => {
+    const out = [];
+    for (const m of arr) {
+      if (out.length >= n) break;
+      if (out.every(s => Math.abs(s.t - m.t) >= gap)) {
+        out.push({ t: m.t, value: m.value, anomaly: m.anomaly });
+      }
+    }
+    return out;
+  };
+  const hot = take(valid.filter(d => d.anomaly > 0).sort((a, b) => b.anomaly - a.anomaly), 5);
+  const cold = take(valid.filter(d => d.anomaly < 0).sort((a, b) => a.anomaly - b.anomaly), 2);
+  return [...hot, ...cold].sort((a, b) => a.t - b.t);
+}
+
+// Build the Thermachrome ribbon dataset for one city / year / variable.
+function buildCurveRibbon(raw, year, baselineStart, baselineEnd, variable) {
+  const buckets = Array.from({ length: 367 }, () => []);
+  const yearMap = new Map();
+  const vals = raw[variable];
+  for (let K = 0; K < raw.dates.length; K++) {
+    const O = vals[K];
+    if (O == null || !Number.isFinite(O)) continue;
+    const $ = raw.dates[K];
+    const V = Number($.slice(0, 4));
+    const ie = Number($.slice(5, 7)) - 1;
+    const pe = Number($.slice(8, 10));
+    if (V >= baselineStart && V <= baselineEnd) buckets[curveDoy(ie, pe)].push(O);
+    if (V === year) yearMap.set($, O);
+  }
+
+  const med = new Array(367).fill(null);
+  const p05 = new Array(367).fill(null);
+  const p95 = new Array(367).fill(null);
+  for (let K = 1; K <= 366; K++) {
+    const O = buckets[K];
+    if (!O.length) continue;
+    const $ = O.slice().sort((a, b) => a - b);
+    med[K] = curvePercentile($, 0.5);
+    p05[K] = curvePercentile($, 0.05);
+    p95[K] = curvePercentile($, 0.95);
+  }
+  const smMed = curveSmoothHarmonic(med);
+  const smLo = curveSmoothHarmonic(p05);
+  const smHi = curveSmoothHarmonic(p95);
+
+  const days = [];
+  const t0 = Date.UTC(year, 0, 1);
+  const t1 = Date.UTC(year, 11, 31);
+  for (let K = t0; K <= t1; K += CURVE_DAY_MS) {
+    const O = new Date(K);
+    const month = O.getUTCMonth();
+    const day = O.getUTCDate();
+    const doy = curveDoy(month, day);
+    const pe = O.toISOString().slice(0, 10);
+    const ce = yearMap.has(pe) ? yearMap.get(pe) : null;
+    const F = smMed[doy] ?? null;
+    const ee = ce != null && F != null ? ce - F : null;
+    days.push({
+      t: K, date: pe, doy,
+      value: ce, normal: F,
+      envLow: smLo[doy] ?? null, envHigh: smHi[doy] ?? null,
+      anomaly: ee,
+    });
+  }
+
+  let T = Infinity, C = -Infinity;
+  for (const K of days) {
+    for (const O of [K.value, K.envLow, K.envHigh, K.normal]) {
+      if (O != null && Number.isFinite(O)) {
+        if (O < T) T = O;
+        if (O > C) C = O;
+      }
+    }
+  }
+  if (!Number.isFinite(T)) { T = -5; C = 35; }
+  const A = Math.max(1, (C - T) * 0.06);
+  const yMin = Math.floor((T - A) / 5) * 5;
+  const yMax = Math.ceil((C + A) / 5) * 5;
+
+  const absAnoms = days.map(K => K.anomaly).filter(K => K != null).map(Math.abs).sort((a, b) => a - b);
+  const X = absAnoms.length ? Math.min(13, Math.max(4, curvePercentile(absAnoms, 0.9))) : 8;
+  const colorDomain = [-X, X];
+
+  let peak = null;
+  for (const K of days) {
+    if (K.value != null && K.anomaly != null && (!peak || K.anomaly > peak.anomaly)) {
+      peak = { t: K.t, value: K.value, anomaly: K.anomaly };
+    }
+  }
+
+  return {
+    year,
+    days,
+    yMin, yMax,
+    colorDomain,
+    annotations: curvePickAnnotations(days),
+    peak,
+    baselineLabel: fillTemplate(t('curves_method'), { start: baselineStart, end: baselineEnd }),
+  };
+}
+
+function getCurveCities() {
+  return S.cities
+    .filter(c => rawCache.has(rawCacheKey(c.id)))
+    .map(c => {
+      const raw = rawCache.get(rawCacheKey(c.id));
+      raw._id = rawCacheKey(c.id);
+      const ribbon = buildCurveRibbon(raw, S.selectedYear, S.baselineStart, S.baselineEnd, S.variable);
+      return { city: c, ribbon };
+    })
+    .filter(d => d.ribbon.days.some(day => day.value != null));
+}
+
+function sharedCurveScales(entries) {
+  let yMin = Infinity, yMax = -Infinity, aMax = 0;
+  for (const { ribbon } of entries) {
+    if (ribbon.yMin < yMin) yMin = ribbon.yMin;
+    if (ribbon.yMax > yMax) yMax = ribbon.yMax;
+    aMax = Math.max(aMax, Math.abs(ribbon.colorDomain[0]), Math.abs(ribbon.colorDomain[1]));
+  }
+  if (!Number.isFinite(yMin)) { yMin = -5; yMax = 35; }
+  if (!aMax) aMax = 8;
+  return { yMin, yMax, colorDomain: [-aMax, aMax] };
+}
+
+function curveAnomalyColor(anom, colorDomain) {
+  const [lo, hi] = colorDomain;
+  const tFrac = (anom - lo) / (hi - lo || 1);
+  return rgb(rdbu(Math.max(0, Math.min(1, tFrac))));
+}
+
+function curveSubtitle() {
+  const varLabel = { mean: t('var_mean'), max: t('var_max'), min: t('var_min') }[S.variable];
+  return fillTemplate(t('curves_subtitle'), {
+    v: varLabel, start: S.baselineStart, end: S.baselineEnd, year: S.selectedYear,
+  });
+}
+
+function buildCurvesSVG(city, ribbon, scales, uid) {
+  const yMin = scales?.yMin ?? ribbon.yMin;
+  const yMax = scales?.yMax ?? ribbon.yMax;
+  const colorDomain = scales?.colorDomain ?? ribbon.colorDomain;
+  const days = ribbon.days;
+  const year = ribbon.year;
+  const Wv = CURVE_SVG_W, Hv = CURVE_SVG_H;
+  const marginL = 46, marginR = 14, marginT = 18, marginB = 28;
+  const plotW = Wv - marginL - marginR;
+  const plotH = Hv - marginT - marginB;
+  const t0 = days[0].t, tSpan = (days[days.length - 1].t - t0) || 1;
+  const ySpan = (yMax - yMin) || 1;
+  const xOf = tt => marginL + ((tt - t0) / tSpan) * plotW;
+  const yOf = v => marginT + plotH - ((v - yMin) / ySpan) * plotH;
+  const monthAbbr = t('month_abbr');
+  const dim = 'var(--text-dim)';
+  const ink = 'var(--ink)';
+
+  let months = '', grid = '', ribbons = '', paths = '', annots = '', hits = '';
+
+  for (let D = 0; D < 12; D++) {
+    const W = Math.max(marginL, xOf(Date.UTC(year, D, 1)));
+    const le = Math.min(marginL + plotW, xOf(Date.UTC(year, D + 1, 1)));
+    if (D % 2 === 1) {
+      months += `<rect x="${W.toFixed(2)}" y="${marginT}" width="${(le - W).toFixed(2)}" height="${plotH}" fill="${ink}" fill-opacity="0.035"/>`;
+    }
+    months += `<text x="${((W + le) / 2).toFixed(2)}" y="${(Hv - 10).toFixed(2)}" text-anchor="middle" font-size="11" fill="${dim}">${escapeHtml(monthAbbr[D])}</text>`;
+  }
+
+  for (let D = yMin; D <= yMax; D += 5) {
+    const W = yOf(D);
+    grid += `<line x1="${marginL}" y1="${W.toFixed(2)}" x2="${(marginL + plotW).toFixed(2)}" y2="${W.toFixed(2)}" stroke="${dim}" stroke-width="0.7" opacity="0.35"/>`;
+    grid += `<text x="${(marginL - 7).toFixed(2)}" y="${(W + 3.5).toFixed(2)}" text-anchor="end" font-size="11" fill="${dim}">${D}</text>`;
+  }
+  grid += `<text x="4" y="${(marginT - 4).toFixed(2)}" font-size="11" font-weight="600" fill="${dim}">°C</text>`;
+
+  for (let D = 0; D < days.length - 1; D++) {
+    const W = days[D], le = days[D + 1];
+    if (W.value == null || le.value == null || W.normal == null || le.normal == null) continue;
+    const anom = ((W.anomaly ?? 0) + (le.anomaly ?? 0)) / 2;
+    const pts = [
+      [xOf(W.t), yOf(W.value)], [xOf(le.t), yOf(le.value)],
+      [xOf(le.t), yOf(le.normal)], [xOf(W.t), yOf(W.normal)],
+    ].map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
+    ribbons += `<polygon class="curves-ribbon" points="${pts}" fill="${curveAnomalyColor(anom, colorDomain)}"/>`;
+  }
+
+  const linePath = (getter) => {
+    let d = '', on = false;
+    for (const f of days) {
+      const v = getter(f);
+      if (v == null) { on = false; continue; }
+      const cmd = on ? 'L' : 'M';
+      d += `${cmd}${xOf(f.t).toFixed(2)} ${yOf(v).toFixed(2)} `;
+      on = true;
+    }
+    return d.trim();
+  };
+  const envHi = linePath(d => d.envHigh);
+  const envLo = linePath(d => d.envLow);
+  const normal = linePath(d => d.normal);
+  const value = linePath(d => d.value);
+  if (envHi) paths += `<path class="curves-line" d="${envHi}" fill="none" stroke="${dim}" stroke-width="1" stroke-dasharray="1.5 3" opacity="0.55"/>`;
+  if (envLo) paths += `<path class="curves-line" d="${envLo}" fill="none" stroke="${dim}" stroke-width="1" stroke-dasharray="1.5 3" opacity="0.55"/>`;
+  if (normal) paths += `<path class="curves-line" d="${normal}" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  if (value) paths += `<path class="curves-line" d="${value}" fill="none" stroke="${dim}" stroke-width="1.1" opacity="0.7"/>`;
+
+  const labelDay = [...days].reverse().find(d => d.envHigh != null && d.envLow != null && d.normal != null);
+  if (labelDay) {
+    const lx = xOf(labelDay.t) - 3;
+    paths += `<text x="${lx.toFixed(2)}" y="${(yOf(labelDay.envHigh) - 3).toFixed(2)}" text-anchor="end" font-size="9.5" font-weight="600" fill="${dim}">${escapeHtml(t('curves_legend_p95'))}</text>`;
+    paths += `<text x="${lx.toFixed(2)}" y="${(yOf(labelDay.envLow) + 11).toFixed(2)}" text-anchor="end" font-size="9.5" font-weight="600" fill="${dim}">${escapeHtml(t('curves_legend_p5'))}</text>`;
+  }
+  const normLabel = days.find(d => d.t >= Date.UTC(year, 9, 1) && d.normal != null) || days.find(d => d.normal != null);
+  if (normLabel) {
+    paths += `<text x="${(xOf(normLabel.t) + 5).toFixed(2)}" y="${(yOf(normLabel.normal) - 6).toFixed(2)}" font-size="11" font-style="italic" fill="${dim}">${escapeHtml(t('curves_legend_normal'))}</text>`;
+  }
+
+  for (const D of ribbon.annotations) {
+    const W = xOf(D.t), le = yOf(D.value);
+    const sign = D.anomaly > 0 ? '+' : '';
+    annots += `<circle class="curves-annot" cx="${W.toFixed(2)}" cy="${le.toFixed(2)}" r="3.4" fill="var(--panel-bg)" stroke="${ink}" stroke-width="1.6"/>`;
+    annots += `<text class="curves-annot" x="${W.toFixed(2)}" y="${(le - 8).toFixed(2)}" text-anchor="middle" font-size="11" font-weight="700" fill="${ink}">${sign}${D.anomaly.toFixed(1)}</text>`;
+  }
+
+  const hitW = Math.max(2, plotW / days.length);
+  days.forEach((d) => {
+    if (d.value == null) return;
+    const hx = xOf(d.t) - hitW / 2;
+    hits += `<rect class="curves-hit" x="${hx.toFixed(2)}" y="${marginT}" width="${hitW.toFixed(2)}" height="${plotH}"
+      data-date="${d.date}" data-v="${d.value.toFixed(2)}"
+      data-normal="${d.normal != null ? d.normal.toFixed(2) : ''}"
+      data-anom="${d.anomaly != null ? d.anomaly.toFixed(2) : ''}"
+      data-city="${escapeHtml(city.name)}"/>`;
+  });
+
+  let peakHtml = '';
+  if (ribbon.peak) {
+    const D = ribbon.peak;
+    const dt = new Date(D.t);
+    const le = `${dt.getUTCDate()} ${monthAbbr[dt.getUTCMonth()]}`;
+    const sign = D.anomaly > 0 ? '+' : '';
+    peakHtml =
+        `<text x="${(marginL + 12).toFixed(2)}" y="${(marginT + 14).toFixed(2)}" font-size="10" font-weight="600" fill="${dim}" letter-spacing="0.08em">${escapeHtml(t('curves_peak').toUpperCase())}</text>`
+      + `<text x="${(marginL + 12).toFixed(2)}" y="${(marginT + 40).toFixed(2)}" font-size="26" font-weight="800" font-family="var(--font-serif)" fill="${curveAnomalyColor(D.anomaly, colorDomain)}">${sign}${D.anomaly.toFixed(1)}°</text>`
+      + `<text x="${(marginL + 12).toFixed(2)}" y="${(marginT + 58).toFixed(2)}" font-size="13" font-style="italic" fill="${dim}">${escapeHtml(le)} · ${D.value.toFixed(1)}°C</text>`;
+  }
+
+  const method = `<text x="${(marginL + plotW - 6).toFixed(2)}" y="${(marginT + 14).toFixed(2)}" text-anchor="end" font-size="10.5" font-style="italic" fill="${dim}">${escapeHtml(ribbon.baselineLabel)}</text>`;
+
+  const html = `
+    <div class="curves-panel">
+      <p class="curves-panel__title">${escapeHtml(city.name)}</p>
+      <p class="curves-panel__subtitle">${escapeHtml(curveSubtitle())}</p>
+      <svg class="curves-svg" viewBox="0 0 ${Wv} ${Hv}" preserveAspectRatio="xMidYMid meet" data-city="${escapeHtml(city.name)}">${months}${grid}${ribbons}${paths}${annots}${peakHtml}${method}${hits}</svg>
+    </div>`;
+  return { html, colorDomain };
+}
+
+function layoutCurvesOverlay() {
+  const left = panelEdgeLeft();
+  document.getElementById('curves-overlay').style.left = left + 'px';
+  document.documentElement.style.setProperty('--curves-left', left + 'px');
+}
+
+function updateCurvesNav(perCity, index) {
+  const nav = document.getElementById('curves-nav');
+  const label = document.getElementById('curves-nav-label');
+  const prev = document.getElementById('curves-prev');
+  const next = document.getElementById('curves-next');
+  if (!nav || !label || !prev || !next) return;
+  if (perCity.length <= 1) { nav.hidden = true; return; }
+  nav.hidden = false;
+  label.textContent = `${index + 1} / ${perCity.length} · ${perCity[index]?.city?.name || ''}`;
+  prev.disabled = index <= 0;
+  next.disabled = index >= perCity.length - 1;
+}
+
+function renderCurves() {
+  layoutCurvesOverlay();
+  hideHoverUI();
+  const overlay = document.getElementById('curves-overlay');
+  const grid = document.getElementById('curves-grid');
+  const perCity = getCurveCities();
+  if (!perCity.length) {
+    overlay.classList.remove('visible');
+    grid.innerHTML = '';
+    updateCurvesNav([], 0);
+    document.getElementById('legend').style.display = 'none';
+    return;
+  }
+
+  const legendStats = [{ anom: 0, std: 1 }];
+
+  if (S.mode === 'compare') {
+    document.getElementById('curves-nav').hidden = true;
+    const shown = perCity.slice(0, 4);
+    const shared = S.sharedScale ? sharedCurveScales(shown) : null;
+    grid.className = 'curves-grid curves-grid--' + Math.min(4, shown.length);
+    let colorDomain = shared?.colorDomain ?? shown[0].ribbon.colorDomain;
+    grid.innerHTML = shown.map(({ city, ribbon }, i) => {
+      const scales = shared || { yMin: ribbon.yMin, yMax: ribbon.yMax, colorDomain: ribbon.colorDomain };
+      colorDomain = scales.colorDomain;
+      return buildCurvesSVG(city, ribbon, scales, i).html;
+    }).join('');
+    updateLegend(legendStats, colorDomain[0], colorDomain[1], colorDomain);
+  } else {
+    if (S.curvesIndex >= perCity.length) S.curvesIndex = perCity.length - 1;
+    if (S.curvesIndex < 0) S.curvesIndex = 0;
+    const { city, ribbon } = perCity[S.curvesIndex];
+    const scales = { yMin: ribbon.yMin, yMax: ribbon.yMax, colorDomain: ribbon.colorDomain };
+    grid.className = 'curves-grid curves-grid--single';
+    grid.innerHTML = buildCurvesSVG(city, ribbon, scales, 0).html;
+    updateCurvesNav(perCity, S.curvesIndex);
+    updateLegend(legendStats, scales.colorDomain[0], scales.colorDomain[1], scales.colorDomain);
+  }
+
+  overlay.classList.add('visible');
+}
+
+// ─── Radial view (poster-style daily min–max wheel, one panel per city) ─────
+// Fixed Jun–Jul–Aug window of the selected year: one wedge per day running
+// from that day's minimum to its maximum. Absolute colouring uses the max
+// warm half-palette along the temperature gradient, with a climate-normal
+// baseline line for the selected variable. Anomaly colouring paints each
+// wedge with the same RdBu / anomDomain mapping as stripes and bars.
+const RADIAL_SVG_W = 780, RADIAL_SVG_H = 800;
+const RADIAL_CX = 390, RADIAL_CY = 372;
+const RADIAL_R_OUT = 268, RADIAL_R_HOLE = 78;
+const RADIAL_ABS_DOMAIN = [10, 45]; // °C radial axis
+const RADIAL_MONTHS = [6, 7, 8];
+const RADIAL_LABEL_EVERY = 7;
+const RADIAL_ALLOWED_GRANULARITIES = new Set(['daily']);
+
+function radialAbsColor(tempC) {
+  const t = (tempC - ABS_MAX_DOMAIN[0]) / (ABS_MAX_DOMAIN[1] - ABS_MAX_DOMAIN[0]);
+  return rgb(rdbuWarm(Math.max(0, Math.min(1, t))));
+}
+
+// Jun 1 – Aug 31 of S.selectedYear, enriched with the selected variable's
+// value / anomaly / climate-normal baseline (same daily slot pipeline as
+// stripes under daily granularity).
+function getRadialDays(city) {
+  const raw = rawCache.get(rawCacheKey(city.id));
+  if (!raw) return null;
+  raw._id = rawCacheKey(city.id);
+
+  const model = MODELS[S.model];
+  const fullStart = model.start;
+  const fullEnd = model.end ?? new Date().getUTCFullYear();
+  const fullSeries = aggregate(raw, 'daily', S.variable, fullStart, fullEnd);
+  const fullStats = computeStats(fullSeries, S.baselineStart, S.baselineEnd, 'daily');
+  const byDate = new Map(fullStats.map(p => [p.k, p]));
+
+  const prefix = String(S.selectedYear) + '-';
+  const out = [];
+  for (let i = 0; i < raw.dates.length; i++) {
+    const d = raw.dates[i];
+    if (!d.startsWith(prefix)) continue;
+    if (!RADIAL_MONTHS.includes(parseInt(d.slice(5, 7), 10))) continue;
+    const lo = raw.min?.[i] ?? raw.mean?.[i];
+    const hi = raw.max?.[i] ?? raw.mean?.[i];
+    if (lo == null || hi == null) continue;
+    const p = byDate.get(d);
+    const tmin = Math.min(lo, hi), tmax = Math.max(lo, hi);
+    const v = p?.v ?? (raw[S.variable]?.[i] ?? (tmin + tmax) / 2);
+    const anom = p?.anom ?? 0;
+    const std = p?.std ?? 1;
+    out.push({
+      date: d, tmin, tmax, v, anom, std,
+      baseline: p != null ? (p.v - p.anom) : null,
+    });
+  }
+  return out;
+}
+
+function getRadialCities() {
+  return S.cities
+    .filter(c => rawCache.has(rawCacheKey(c.id)))
+    .map(c => ({ city: c, days: getRadialDays(c) }))
+    .filter(d => d.days?.length >= 10);
+}
+
+function getRadialDomain(_entries) {
+  return [...RADIAL_ABS_DOMAIN];
+}
+
+function getRadialColorContext(entries) {
+  const statsList = entries.map(e => e.days);
+  return getBarChartColorContext(statsList, statsList[0]);
+}
+
+function radialPoint(deg, r) {
+  const a = (deg * Math.PI) / 180;
+  return [RADIAL_CX + r * Math.cos(a), RADIAL_CY + r * Math.sin(a)];
+}
+
+// Annulus sector path between two angles (deg, clockwise) and two radii.
+function radialSector(a0, a1, r0, r1) {
+  const [x0o, y0o] = radialPoint(a0, r1), [x1o, y1o] = radialPoint(a1, r1);
+  const [x1i, y1i] = radialPoint(a1, r0), [x0i, y0i] = radialPoint(a0, r0);
+  const large = Math.abs(a1 - a0) > 180 ? 1 : 0;
+  return `M ${x0o.toFixed(2)} ${y0o.toFixed(2)} A ${r1.toFixed(2)} ${r1.toFixed(2)} 0 ${large} 1 ${x1o.toFixed(2)} ${y1o.toFixed(2)}`
+       + ` L ${x1i.toFixed(2)} ${y1i.toFixed(2)} A ${r0.toFixed(2)} ${r0.toFixed(2)} 0 ${large} 0 ${x0i.toFixed(2)} ${y0i.toFixed(2)} Z`;
+}
+
+function radialSubtitle(days) {
+  if (S.coloring === 'anomaly') {
+    const varLabel = { mean: t('var_mean'), max: t('var_max'), min: t('var_min') }[S.variable];
+    return fillTemplate(t('radial_subtitle_anomaly'), {
+      v: varLabel, start: S.baselineStart, end: S.baselineEnd, year: S.selectedYear,
+    });
+  }
+  return fillTemplate(t('radial_subtitle'), { year: S.selectedYear, days: days.length });
+}
+
+function buildRadialSVG(city, days, domain, uid, colorCtx) {
+  const [tLo, tHi] = domain;
+  const { dMin, dMax, anomDomain } = colorCtx;
+  const isAnomaly = S.coloring === 'anomaly';
+  const n = days.length;
+  const slot = 360 / n;
+  const pad = slot * 0.13;
+  const rOf = v => RADIAL_R_HOLE + ((Math.min(Math.max(v, tLo), tHi) - tLo) / (tHi - tLo || 1)) * (RADIAL_R_OUT - RADIAL_R_HOLE);
+  const monthAbbr = t('month_abbr');
+  const dim = 'var(--text-dim)';
+
+  let defs = '', weekends = '', wedges = '', hits = '', rules = '', labels = '';
+  const baselinePts = [];
+
+  days.forEach((d, i) => {
+    const base = -90 + i * slot;
+    const a0 = base + pad, a1 = base + slot - pad;
+    const mid = base + slot / 2;
+    const r0 = rOf(d.tmin), r1 = Math.max(rOf(d.tmax), rOf(d.tmin) + 0.6);
+    const dow = new Date(d.date + 'T00:00:00Z').getUTCDay();
+
+    if (dow === 0 || dow === 6) {
+      weekends += `<path class="radial-day" d="${radialSector(base, base + slot, RADIAL_R_HOLE, RADIAL_R_OUT + 6)}" fill="var(--ink)" fill-opacity="0.07"/>`;
+    }
+
+    if (isAnomaly) {
+      const [cr, cg, cb] = colorFn(d, 'anomaly', dMin, dMax, anomDomain);
+      wedges += `<path class="radial-day" d="${radialSector(a0, a1, r0, r1)}" fill="rgb(${cr},${cg},${cb})"/>`;
+    } else {
+      // Absolute: gradient along the radius tracks temperature with the max
+      // warm half-palette (same as absolute max on ridgeline / stripes).
+      const gid = `rg${uid}_${i}`;
+      const [gx0, gy0] = radialPoint(mid, r0), [gx1, gy1] = radialPoint(mid, r1);
+      let stops = '';
+      for (let s = 0; s <= 4; s++) {
+        const v = d.tmin + (s / 4) * (d.tmax - d.tmin);
+        stops += `<stop offset="${(s / 4 * 100).toFixed(0)}%" stop-color="${radialAbsColor(v)}"/>`;
+      }
+      defs += `<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${gx0.toFixed(2)}" y1="${gy0.toFixed(2)}" x2="${gx1.toFixed(2)}" y2="${gy1.toFixed(2)}">${stops}</linearGradient>`;
+      wedges += `<path class="radial-day" d="${radialSector(a0, a1, r0, r1)}" fill="url(#${gid})"/>`;
+    }
+
+    if (!isAnomaly && d.baseline != null && isFinite(d.baseline)) {
+      baselinePts.push(radialPoint(mid, rOf(d.baseline)));
+    }
+
+    hits += `<path class="radial-day-hit" fill="none" pointer-events="all" d="${radialSector(base, base + slot, RADIAL_R_HOLE, RADIAL_R_OUT + 6)}"
+      data-date="${d.date}" data-min="${d.tmin.toFixed(1)}" data-max="${d.tmax.toFixed(1)}"
+      data-v="${d.v.toFixed(2)}" data-anom="${d.anom.toFixed(2)}"
+      data-baseline="${d.baseline != null ? d.baseline.toFixed(2) : ''}"
+      data-city="${escapeHtml(city.name)}"/>`;
+
+    if (d.date.slice(8) === '01') {
+      const [lx0, ly0] = radialPoint(base, RADIAL_R_HOLE);
+      const [lx1, ly1] = radialPoint(base, RADIAL_R_OUT + 24);
+      const [mx, my] = radialPoint(base, RADIAL_R_OUT + 36);
+      rules += `<line x1="${lx0.toFixed(2)}" y1="${ly0.toFixed(2)}" x2="${lx1.toFixed(2)}" y2="${ly1.toFixed(2)}" stroke="${dim}" stroke-width="0.8" opacity="0.7"/>`;
+      labels += `<text x="${mx.toFixed(2)}" y="${(my + 4).toFixed(2)}" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1.2" fill="${dim}">${escapeHtml((monthAbbr[parseInt(d.date.slice(5, 7), 10) - 1] || '').toUpperCase())}</text>`;
+    }
+    if (i % RADIAL_LABEL_EVERY === 0 && n - i > 3) {
+      const [dx, dy] = radialPoint(mid, RADIAL_R_OUT + 56);
+      const lbl = `${d.date.slice(8)} ${monthAbbr[parseInt(d.date.slice(5, 7), 10) - 1] || ''}`;
+      labels += `<text x="${dx.toFixed(2)}" y="${(dy + 3.5).toFixed(2)}" text-anchor="middle" font-size="10.5" fill="${dim}">${escapeHtml(lbl)}</text>`;
+    }
+  });
+
+  // Climate-normal baseline for the selected variable (absolute mode only),
+  // drawn on top of the wedges in ink (white on dark, black on paper).
+  let baselineLine = '';
+  if (!isAnomaly && baselinePts.length >= 2) {
+    let dPath = '';
+    baselinePts.forEach(([x, y], i) => {
+      dPath += `${i === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)} `;
+    });
+    dPath += 'Z';
+    baselineLine = `<path class="radial-baseline" d="${dPath.trim()}" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.92"/>`;
+  }
+
+  let rings = '';
+  for (let v = Math.ceil(tLo / 5) * 5; v <= tHi; v += 5) {
+    if (v <= tLo) continue;
+    const r = rOf(v);
+    rings += `<circle cx="${RADIAL_CX}" cy="${RADIAL_CY}" r="${r.toFixed(2)}" fill="none" stroke="${dim}" stroke-width="0.6" opacity="0.35"/>`;
+    labels += `<text x="${RADIAL_CX + 3}" y="${(RADIAL_CY - r + 3.5).toFixed(2)}" text-anchor="start" font-size="9.5" fill="${dim}" opacity="0.9">${v}&#176;C</text>`;
+  }
+
+  const hub = `<circle cx="${RADIAL_CX}" cy="${RADIAL_CY}" r="${RADIAL_R_HOLE}" fill="var(--ink)" fill-opacity="0.05"/>`
+    + `<text x="${RADIAL_CX}" y="${RADIAL_CY + 9}" text-anchor="middle" font-size="26" font-family="var(--font-serif)" fill="var(--ink)" opacity="0.85">${S.selectedYear}</text>`;
+
+  const lgY = RADIAL_SVG_H - 26;
+  let legend = '';
+  if (isAnomaly) {
+    legend =
+        `<rect x="196" y="${lgY - 9}" width="22" height="11" fill="var(--ink)" fill-opacity="0.07"/>`
+      + `<text x="226" y="${lgY}" font-size="11" fill="${dim}">${escapeHtml(t('radial_legend_weekend'))}</text>`;
+  } else {
+    const [cLo, cHi] = ABS_MAX_DOMAIN;
+    let lgStops = '';
+    for (let s = 0; s <= 6; s++) {
+      const v = cLo + (s / 6) * (cHi - cLo);
+      lgStops += `<stop offset="${(s / 6 * 100).toFixed(0)}%" stop-color="${radialAbsColor(v)}"/>`;
+    }
+    defs += `<linearGradient id="rgleg${uid}" x1="0" y1="0" x2="1" y2="0">${lgStops}</linearGradient>`;
+    const blLabel = fillTemplate(t('radial_legend_baseline'), { start: S.baselineStart, end: S.baselineEnd });
+    legend =
+        `<rect x="70" y="${lgY - 9}" width="100" height="11" fill="url(#rgleg${uid})"/>`
+      + `<text x="178" y="${lgY}" font-size="11" fill="${dim}">${escapeHtml(t('radial_legend_temp'))} (${cLo}&#176;–${cHi}&#176;)</text>`
+      + `<line x1="360" y1="${lgY - 3.5}" x2="388" y2="${lgY - 3.5}" stroke="var(--ink)" stroke-width="2.2"/>`
+      + `<text x="396" y="${lgY}" font-size="11" fill="${dim}">${escapeHtml(blLabel)}</text>`
+      + `<rect x="560" y="${lgY - 9}" width="22" height="11" fill="var(--ink)" fill-opacity="0.07"/>`
+      + `<text x="590" y="${lgY}" font-size="11" fill="${dim}">${escapeHtml(t('radial_legend_weekend'))}</text>`;
+  }
+
+  const html = `
+    <div class="radial-panel">
+      <p class="radial-panel__title">${escapeHtml(city.name)}</p>
+      <p class="radial-panel__subtitle">${escapeHtml(radialSubtitle(days))}</p>
+      <svg class="radial-svg" viewBox="0 0 ${RADIAL_SVG_W} ${RADIAL_SVG_H}" preserveAspectRatio="xMidYMid meet" data-city="${escapeHtml(city.name)}"><defs>${defs}</defs>${weekends}${rings}${wedges}${baselineLine}${rules}${hub}${labels}${legend}${hits}</svg>
+    </div>`;
+  return { html };
+}
+
+function layoutRadialOverlay() {
+  const left = panelEdgeLeft();
+  document.getElementById('radial-overlay').style.left = left + 'px';
+  document.documentElement.style.setProperty('--radial-left', left + 'px');
+}
+
+function updateRadialNav(perCity, index) {
+  const nav = document.getElementById('radial-nav');
+  const label = document.getElementById('radial-nav-label');
+  const prev = document.getElementById('radial-prev');
+  const next = document.getElementById('radial-next');
+  if (!nav || !label || !prev || !next) return;
+  if (perCity.length <= 1) { nav.hidden = true; return; }
+  nav.hidden = false;
+  label.textContent = `${index + 1} / ${perCity.length} · ${perCity[index]?.city?.name || ''}`;
+  prev.disabled = index <= 0;
+  next.disabled = index >= perCity.length - 1;
+}
+
+function renderRadial() {
+  layoutRadialOverlay();
+  hideHoverUI();
+  const overlay = document.getElementById('radial-overlay');
+  const grid = document.getElementById('radial-grid');
+  const perCity = getRadialCities();
+  if (!perCity.length) {
+    overlay.classList.remove('visible');
+    grid.innerHTML = '';
+    updateRadialNav([], 0);
+    document.getElementById('legend').style.display = 'none';
+    return;
+  }
+
+  const domain = getRadialDomain(perCity);
+
+  if (S.mode === 'compare') {
+    document.getElementById('radial-nav').hidden = true;
+    const shown = perCity.slice(0, 4);
+    const sharedColor = getRadialColorContext(shown);
+    grid.className = 'radial-grid radial-grid--' + Math.min(4, shown.length);
+    grid.innerHTML = shown
+      .map(({ city, days }, i) => {
+        const color = S.sharedScale ? sharedColor : getRadialColorContext([{ days }]);
+        return buildRadialSVG(city, days, domain, i, color).html;
+      })
+      .join('');
+    if (S.coloring === 'anomaly') {
+      updateLegend(shown[0].days, sharedColor.dMin, sharedColor.dMax, sharedColor.anomDomain);
+    } else {
+      document.getElementById('legend').style.display = 'none';
+    }
+  } else {
+    if (S.radialIndex >= perCity.length) S.radialIndex = perCity.length - 1;
+    if (S.radialIndex < 0) S.radialIndex = 0;
+    const { city, days } = perCity[S.radialIndex];
+    const color = getRadialColorContext([{ days }]);
+    grid.className = 'radial-grid radial-grid--single';
+    grid.innerHTML = buildRadialSVG(city, days, domain, 0, color).html;
+    updateRadialNav(perCity, S.radialIndex);
+    if (S.coloring === 'anomaly') {
+      updateLegend(days, color.dMin, color.dMax, color.anomDomain);
+    } else {
+      document.getElementById('legend').style.display = 'none';
+    }
+  }
+
   overlay.classList.add('visible');
 }
 
@@ -2270,6 +3111,8 @@ function drawScene() {
     hideHoverUI();
     canvas.style.display = 'none';
     document.getElementById('ridgeline-overlay').classList.remove('visible');
+    document.getElementById('radial-overlay').classList.remove('visible');
+    document.getElementById('curves-overlay').classList.remove('visible');
     renderBarCharts();
     return;
   }
@@ -2277,12 +3120,34 @@ function drawScene() {
     hideHoverUI();
     canvas.style.display = 'none';
     document.getElementById('barchart-overlay').classList.remove('visible');
+    document.getElementById('radial-overlay').classList.remove('visible');
+    document.getElementById('curves-overlay').classList.remove('visible');
     renderRidgeline();
+    return;
+  }
+  if (S.chartView === 'radial') {
+    hideHoverUI();
+    canvas.style.display = 'none';
+    document.getElementById('barchart-overlay').classList.remove('visible');
+    document.getElementById('ridgeline-overlay').classList.remove('visible');
+    document.getElementById('curves-overlay').classList.remove('visible');
+    renderRadial();
+    return;
+  }
+  if (S.chartView === 'curves') {
+    hideHoverUI();
+    canvas.style.display = 'none';
+    document.getElementById('barchart-overlay').classList.remove('visible');
+    document.getElementById('ridgeline-overlay').classList.remove('visible');
+    document.getElementById('radial-overlay').classList.remove('visible');
+    renderCurves();
     return;
   }
   canvas.style.display = '';
   document.getElementById('barchart-overlay').classList.remove('visible');
   document.getElementById('ridgeline-overlay').classList.remove('visible');
+  document.getElementById('radial-overlay').classList.remove('visible');
+  document.getElementById('curves-overlay').classList.remove('visible');
 
   _renderCtx = ctx;
   const scene = drawStripesContent(W, H);
@@ -2311,7 +3176,7 @@ function updateLegend(stats, dMin, dMax, anomDomain) {
   legend.style.display = '';
   bar.style.background = 'var(--spectrum)';
 
-  if (S.coloring === 'anomaly') {
+  if (S.coloring === 'anomaly' || S.chartView === 'curves') {
     const yearLabel = S.granularity === 'yearly' ? '' : ` · ${S.selectedYear}`;
     unit.textContent = fillTemplate(t('legend_anomaly_vs'), { start: S.baselineStart, end: S.baselineEnd, year: yearLabel });
 
@@ -2530,6 +3395,119 @@ document.getElementById('ridgeline-grid').addEventListener('mousemove', e => {
 });
 document.getElementById('ridgeline-grid').addEventListener('mouseleave', hideHoverUI);
 document.getElementById('ridgeline-overlay').addEventListener('mouseleave', hideHoverUI);
+
+document.getElementById('radial-prev').addEventListener('click', () => {
+  if (S.chartView !== 'radial' || S.mode === 'compare') return;
+  if (S.radialIndex > 0) { S.radialIndex--; renderRadial(); }
+});
+document.getElementById('radial-next').addEventListener('click', () => {
+  if (S.chartView !== 'radial' || S.mode === 'compare') return;
+  if (S.radialIndex < getRadialCities().length - 1) { S.radialIndex++; renderRadial(); }
+});
+
+function showRadialTooltip(e, hit) {
+  const date = hit.dataset.date || '';
+  const lo = parseFloat(hit.dataset.min), hi = parseFloat(hit.dataset.max);
+  const v = parseFloat(hit.dataset.v);
+  const anom = parseFloat(hit.dataset.anom);
+  const baseline = hit.dataset.baseline !== '' ? parseFloat(hit.dataset.baseline) : NaN;
+  const d = new Date(date + 'T00:00:00Z');
+  const dateLabel = d.toLocaleDateString(t('locale'), { day: '2-digit', month: 'short', weekday: 'short', timeZone: 'UTC' });
+  const varLabel = { mean: t('var_mean'), max: t('var_max'), min: t('var_min') }[S.variable];
+  const anomSign = anom >= 0 ? '+' : '';
+  let rows = `
+      <div class="tooltip__row is-strong">
+        <span>${t('radial_tooltip_range')}</span>
+        <span class="tooltip__value">${lo.toFixed(1)}° – ${hi.toFixed(1)}°</span>
+      </div>
+      <div class="tooltip__row">
+        <span>${varLabel}</span>
+        <span class="tooltip__value">${v.toFixed(1)}°</span>
+      </div>`;
+  if (S.coloring === 'anomaly') {
+    rows += `
+      <div class="tooltip__row">
+        <span>${t('radial_tooltip_anomaly')}</span>
+        <span class="tooltip__value">${anomSign}${anom.toFixed(2)}°</span>
+      </div>
+      <div class="tooltip__row">
+        <span>${t('tooltip_baseline')}</span>
+        <span class="tooltip__value">${S.baselineStart}–${S.baselineEnd}</span>
+      </div>`;
+  } else if (isFinite(baseline)) {
+    rows += `
+      <div class="tooltip__row">
+        <span>${t('radial_tooltip_baseline')} (${S.baselineStart}–${S.baselineEnd})</span>
+        <span class="tooltip__value">${baseline.toFixed(1)}°</span>
+      </div>`;
+  }
+  showHoverTooltip(e, {
+    title: hit.dataset.city || '',
+    date: dateLabel,
+    rows,
+  });
+}
+
+document.getElementById('radial-grid').addEventListener('mousemove', e => {
+  if (S.chartView !== 'radial') return;
+  const hit = e.target.closest('.radial-day-hit');
+  if (!hit) { hideHoverUI(); return; }
+  showRadialTooltip(e, hit);
+});
+document.getElementById('radial-grid').addEventListener('mouseleave', hideHoverUI);
+document.getElementById('radial-overlay').addEventListener('mouseleave', hideHoverUI);
+
+document.getElementById('curves-prev').addEventListener('click', () => {
+  if (S.chartView !== 'curves' || S.mode === 'compare') return;
+  if (S.curvesIndex > 0) { S.curvesIndex--; renderCurves(); }
+});
+document.getElementById('curves-next').addEventListener('click', () => {
+  if (S.chartView !== 'curves' || S.mode === 'compare') return;
+  if (S.curvesIndex < getCurveCities().length - 1) { S.curvesIndex++; renderCurves(); }
+});
+
+function showCurvesTooltip(e, hit) {
+  const date = hit.dataset.date || '';
+  const v = parseFloat(hit.dataset.v);
+  const normal = hit.dataset.normal !== '' ? parseFloat(hit.dataset.normal) : NaN;
+  const anom = hit.dataset.anom !== '' ? parseFloat(hit.dataset.anom) : NaN;
+  const d = new Date(date + 'T00:00:00Z');
+  const dateLabel = d.toLocaleDateString(t('locale'), { day: '2-digit', month: 'short', weekday: 'short', timeZone: 'UTC' });
+  const anomSign = isFinite(anom) && anom >= 0 ? '+' : '';
+  let rows = `
+      <div class="tooltip__row is-strong">
+        <span>${t('curves_tooltip_temp')}</span>
+        <span class="tooltip__value">${v.toFixed(1)}°</span>
+      </div>`;
+  if (isFinite(normal)) {
+    rows += `
+      <div class="tooltip__row">
+        <span>${t('curves_tooltip_normal')}</span>
+        <span class="tooltip__value">${normal.toFixed(1)}°</span>
+      </div>`;
+  }
+  if (isFinite(anom)) {
+    rows += `
+      <div class="tooltip__row">
+        <span>${t('curves_tooltip_anomaly')}</span>
+        <span class="tooltip__value">${anomSign}${anom.toFixed(2)}°</span>
+      </div>`;
+  }
+  showHoverTooltip(e, {
+    title: hit.dataset.city || '',
+    date: dateLabel,
+    rows,
+  });
+}
+
+document.getElementById('curves-grid').addEventListener('mousemove', e => {
+  if (S.chartView !== 'curves') return;
+  const hit = e.target.closest('.curves-hit');
+  if (!hit) { hideHoverUI(); return; }
+  showCurvesTooltip(e, hit);
+});
+document.getElementById('curves-grid').addEventListener('mouseleave', hideHoverUI);
+document.getElementById('curves-overlay').addEventListener('mouseleave', hideHoverUI);
 
 // ─── City search UI ────────────────────────────────────────────────────────
 let searchTimer = null;
@@ -2758,22 +3736,46 @@ function invalidateSeriesCache(cityId) {
 }
 
 // ─── Segmented controls ────────────────────────────────────────────────────
+function updateColorSegLock() {
+  const seg = document.getElementById('color-seg');
+  if (!seg) return;
+  const absBtn = seg.querySelector('[data-val="absolute"]');
+  const lockAbs = S.chartView === 'curves';
+  if (absBtn) {
+    absBtn.classList.toggle('is-locked', lockAbs);
+    absBtn.setAttribute('aria-disabled', lockAbs ? 'true' : 'false');
+  }
+  if (lockAbs && S.coloring === 'absolute') {
+    S.coloring = 'anomaly';
+    seg.querySelectorAll('.seg__btn').forEach(b => {
+      b.classList.toggle('is-on', b.dataset.val === 'anomaly');
+    });
+    updateBaselineSectionVisibility();
+  }
+}
+
 function updateGranularitySegLock() {
   const seg = document.getElementById('gran-seg');
   if (!seg) return;
-  const ridge = S.chartView === 'ridge';
+  // Ridgeline works off yearly or daily buckets; radial & curves need the
+  // Range → Year picker (daily granularity).
+  const allowedSet = S.chartView === 'ridge' ? RIDGE_ALLOWED_GRANULARITIES
+                   : (S.chartView === 'radial' || S.chartView === 'curves') ? CURVE_ALLOWED_GRANULARITIES
+                   : null;
   seg.querySelectorAll('.seg__btn').forEach(btn => {
-    const allowed = !ridge || RIDGE_ALLOWED_GRANULARITIES.has(btn.dataset.val);
+    const allowed = !allowedSet || allowedSet.has(btn.dataset.val);
     btn.classList.toggle('is-locked', !allowed);
     btn.setAttribute('aria-disabled', allowed ? 'false' : 'true');
   });
-  if (ridge && !RIDGE_ALLOWED_GRANULARITIES.has(S.granularity)) {
-    S.granularity = 'yearly';
+  if (allowedSet && !allowedSet.has(S.granularity)) {
+    const fallback = (S.chartView === 'radial' || S.chartView === 'curves') ? 'daily' : 'yearly';
+    S.granularity = fallback;
     seg.querySelectorAll('.seg__btn').forEach(b => {
-      b.classList.toggle('is-on', b.dataset.val === 'yearly');
+      b.classList.toggle('is-on', b.dataset.val === fallback);
     });
-    document.getElementById('range-multi').style.display = '';
-    document.getElementById('range-single').style.display = 'none';
+    const isYearly = fallback === 'yearly';
+    document.getElementById('range-multi').style.display = isYearly ? '' : 'none';
+    document.getElementById('range-single').style.display = isYearly ? 'none' : '';
     clearSeriesCache();
   }
 }
@@ -2829,6 +3831,8 @@ makeSeg('model-seg', 'model', async v => {
 makeSeg('mode-seg', 'mode', v => {
   document.getElementById('compare-section').style.display = v==='compare' ? '' : 'none';
   if (S.chartView === 'bar') S.barIndex = 0;
+  if (S.chartView === 'radial') S.radialIndex = 0;
+  if (S.chartView === 'curves') S.curvesIndex = 0;
   drawScene();
 });
 makeSeg('gran-seg', 'granularity', () => {
@@ -2839,16 +3843,28 @@ makeSeg('gran-seg', 'granularity', () => {
   drawScene();
 });
 makeSeg('var-seg', 'variable', () => { clearSeriesCache(); drawScene(); });
-makeSeg('color-seg', 'coloring', v => {
-  document.getElementById('baseline-section').style.display = v==='anomaly' ? '' : 'none';
+function updateBaselineSectionVisibility() {
+  const el = document.getElementById('baseline-section');
+  if (!el) return;
+  // Needed for anomaly colouring everywhere, and for the absolute radial
+  // climate-normal baseline line.
+  el.style.display = (S.coloring === 'anomaly' || S.chartView === 'radial' || S.chartView === 'curves') ? '' : 'none';
+}
+
+makeSeg('color-seg', 'coloring', () => {
+  updateBaselineSectionVisibility();
   drawScene();
 });
 makeSeg('scale-seg', 'sharedScale', v => { S.sharedScale = v==='shared'; drawScene(); });
 makeSeg('chartview-seg', 'chartView', () => {
   updateGranularitySegLock();
+  updateColorSegLock();
+  updateBaselineSectionVisibility();
   drawScene();
 });
 updateGranularitySegLock();
+updateColorSegLock();
+updateBaselineSectionVisibility();
 
 function clearSeriesCache() { seriesCache.clear(); }
 
@@ -2927,6 +3943,8 @@ function togglePanel() {
   updatePresentTitle();
   if (S.chartView === 'bar') layoutBarchartOverlay();
   else if (S.chartView === 'ridge') layoutRidgelineOverlay();
+  else if (S.chartView === 'radial') layoutRadialOverlay();
+  else if (S.chartView === 'curves') layoutCurvesOverlay();
 }
 window.togglePanel = togglePanel;
 
@@ -3160,6 +4178,11 @@ function inlineSvgVars(svgMarkup) {
     'var(--barchart-label-zero)': cssVar('--barchart-label-zero'),
     'var(--rule-soft)': cssVar('--rule-soft'),
     'var(--rule)': cssVar('--rule'),
+    // used by the radial wheel (rings, labels, weekend bands, hub)
+    'var(--text-dim)': cssVar('--text-dim'),
+    'var(--ink)': cssVar('--ink'),
+    // quote-free family: this lands inside a double-quoted attribute value
+    'var(--font-serif)': 'Playfair Display, Georgia, serif',
   };
   let s = svgMarkup;
   for (const [token, value] of Object.entries(vars)) s = s.split(token).join(value);
@@ -3637,6 +4660,218 @@ async function exportRidgelinePNG() {
   triggerDownload(c.toDataURL('image/png'), `${exportBaseName()}.png`);
 }
 
+// Radial SVG/PNG export — same panel-card composition as the ridgeline export.
+function radialCitiesToExport() {
+  const perCity = getRadialCities();
+  if (!perCity.length) return null;
+  const isCompare = S.mode === 'compare';
+  const list = isCompare
+    ? perCity.slice(0, 4)
+    : [perCity[Math.min(Math.max(S.radialIndex, 0), perCity.length - 1)]];
+  const sharedColor = (isCompare && S.sharedScale) ? getRadialColorContext(list) : null;
+  const domain = getRadialDomain(list);
+  return { list, sharedColor, domain };
+}
+
+function radialExportGeometry(cols) {
+  const PANEL_W = 660, PAD = 12, HEADER = 48;
+  const CHART_W = PANEL_W - PAD * 2;
+  const CHART_H = Math.round(CHART_W * RADIAL_SVG_H / RADIAL_SVG_W);
+  const PANEL_H = HEADER + CHART_H + PAD;
+  const GAP = 10, MARGIN = 24;
+  return {
+    PANEL_W, PAD, HEADER, CHART_W, CHART_H, PANEL_H, GAP, MARGIN,
+    exportW: MARGIN * 2 + cols * PANEL_W + Math.max(0, cols - 1) * GAP,
+    exportH: MARGIN * 2 + PANEL_H,
+  };
+}
+
+function exportRadialSVG() {
+  const sel = radialCitiesToExport();
+  if (!sel) return;
+  const { list, sharedColor, domain } = sel;
+  const g = radialExportGeometry(list.length);
+
+  let body = `<rect x="0" y="0" width="${g.exportW}" height="${g.exportH}" fill="${cssVar('--bg', '#0b0b0c')}"/>`;
+
+  list.forEach(({ city, days }, i) => {
+    const color = sharedColor || getRadialColorContext([{ days }]);
+    const { html } = buildRadialSVG(city, days, domain, i, color);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.radial-panel__title').textContent;
+    const subtitle = panel.querySelector('.radial-panel__subtitle').textContent;
+    let inner = inlineSvgVars(new XMLSerializer().serializeToString(panel.querySelector('svg')));
+
+    const px = g.MARGIN + i * (g.PANEL_W + g.GAP);
+    const py = g.MARGIN;
+    inner = inner.replace(/^<svg[^>]*>/,
+      `<svg x="${px + g.PAD}" y="${py + g.HEADER}" width="${g.CHART_W}" height="${g.CHART_H}" viewBox="0 0 ${RADIAL_SVG_W} ${RADIAL_SVG_H}" preserveAspectRatio="xMidYMid meet" font-family='${EXPORT_FONT_SANS}'>`);
+
+    body += `<rect x="${px}" y="${py}" width="${g.PANEL_W}" height="${g.PANEL_H}" rx="3" fill="${cssVar('--panel-bg', 'rgba(14,14,15,.9)')}" stroke="${cssVar('--rule', 'rgba(236,230,216,.16)')}" stroke-width="1"/>`;
+    body += `<text x="${px + g.PAD}" y="${py + 22}" font-family='${EXPORT_FONT_SERIF}' font-weight="800" font-size="19" fill="${cssVar('--ink', '#ece6d8')}">${escapeHtml(title)}</text>`;
+    body += `<text x="${px + g.PAD}" y="${py + 38}" font-weight="500" font-size="10.5" fill="${cssVar('--text-dim', 'rgba(236,230,216,.6)')}">${escapeHtml(subtitle)}</text>`;
+    body += inner;
+  });
+
+  body += presentTitleSVG(g.exportW, g.exportH, list[0]?.city?.name || S.cities[0]?.name || '');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${g.exportW}" height="${g.exportH}" viewBox="0 0 ${g.exportW} ${g.exportH}" font-family='${EXPORT_FONT_SANS}'>${body}</svg>`;
+  triggerDownloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${exportBaseName()}.svg`);
+}
+
+async function exportRadialPNG() {
+  const sel = radialCitiesToExport();
+  if (!sel) return;
+  const { list, sharedColor, domain } = sel;
+  const g = radialExportGeometry(list.length);
+  const dpr = 2;
+
+  const c = document.createElement('canvas');
+  c.width = g.exportW * dpr;
+  c.height = g.exportH * dpr;
+  const x = c.getContext('2d');
+  x.scale(dpr, dpr);
+  x.fillStyle = cssVar('--bg', '#0b0b0c');
+  x.fillRect(0, 0, g.exportW, g.exportH);
+
+  for (let i = 0; i < list.length; i++) {
+    const { city, days } = list[i];
+    const color = sharedColor || getRadialColorContext([{ days }]);
+    const { html } = buildRadialSVG(city, days, domain, i, color);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.radial-panel__title').textContent;
+    const subtitle = panel.querySelector('.radial-panel__subtitle').textContent;
+    const svgMarkup = inlineSvgVars(new XMLSerializer().serializeToString(panel.querySelector('svg')));
+
+    const px = g.MARGIN + i * (g.PANEL_W + g.GAP);
+    const py = g.MARGIN;
+
+    x.fillStyle = cssVar('--panel-bg', 'rgba(14,14,15,.9)');
+    x.strokeStyle = cssVar('--rule', 'rgba(236,230,216,.16)');
+    x.lineWidth = 1;
+    roundRectFillStroke(x, px, py, g.PANEL_W, g.PANEL_H, 3);
+
+    x.fillStyle = cssVar('--ink', '#ece6d8');
+    x.font = '800 19px "Playfair Display", Georgia, serif';
+    x.fillText(title, px + g.PAD, py + 22);
+    x.fillStyle = cssVar('--text-dim', 'rgba(236,230,216,.6)');
+    x.font = '500 10.5px Inter, sans-serif';
+    x.fillText(subtitle, px + g.PAD, py + 38);
+
+    try {
+      const chartImg = await loadSvgToCanvas(svgMarkup, g.CHART_W, g.CHART_H);
+      x.drawImage(chartImg, px + g.PAD, py + g.HEADER, g.CHART_W, g.CHART_H);
+    } catch (err) {
+      console.error('Radial export failed', err);
+    }
+  }
+
+  drawPresentTitleOnCanvas(x, g.exportW, g.exportH, list[0]?.city?.name || S.cities[0]?.name || '');
+  triggerDownload(c.toDataURL('image/png'), `${exportBaseName()}.png`);
+}
+
+function curvesCitiesToExport() {
+  const perCity = getCurveCities();
+  if (!perCity.length) return null;
+  const isCompare = S.mode === 'compare';
+  const list = isCompare
+    ? perCity.slice(0, 4)
+    : [perCity[Math.min(Math.max(S.curvesIndex, 0), perCity.length - 1)]];
+  const shared = (isCompare && S.sharedScale) ? sharedCurveScales(list) : null;
+  return { list, shared };
+}
+
+function curvesExportGeometry(cols) {
+  const PANEL_W = 980, PAD = 12, HEADER = 48;
+  const CHART_W = PANEL_W - PAD * 2;
+  const CHART_H = Math.round(CHART_W * CURVE_SVG_H / CURVE_SVG_W);
+  const PANEL_H = HEADER + CHART_H + PAD;
+  const GAP = 10, MARGIN = 24;
+  return {
+    PANEL_W, PAD, HEADER, CHART_W, CHART_H, PANEL_H, GAP, MARGIN,
+    exportW: MARGIN * 2 + cols * PANEL_W + Math.max(0, cols - 1) * GAP,
+    exportH: MARGIN * 2 + PANEL_H,
+  };
+}
+
+function exportCurvesSVG() {
+  const sel = curvesCitiesToExport();
+  if (!sel) return;
+  const { list, shared } = sel;
+  const g = curvesExportGeometry(list.length);
+  let body = `<rect x="0" y="0" width="${g.exportW}" height="${g.exportH}" fill="${cssVar('--bg', '#0b0b0c')}"/>`;
+  list.forEach(({ city, ribbon }, i) => {
+    const scales = shared || { yMin: ribbon.yMin, yMax: ribbon.yMax, colorDomain: ribbon.colorDomain };
+    const { html } = buildCurvesSVG(city, ribbon, scales, i);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.curves-panel__title').textContent;
+    const subtitle = panel.querySelector('.curves-panel__subtitle').textContent;
+    let inner = inlineSvgVars(new XMLSerializer().serializeToString(panel.querySelector('svg')));
+    const px = g.MARGIN + i * (g.PANEL_W + g.GAP);
+    const py = g.MARGIN;
+    inner = inner.replace(/^<svg[^>]*>/,
+      `<svg x="${px + g.PAD}" y="${py + g.HEADER}" width="${g.CHART_W}" height="${g.CHART_H}" viewBox="0 0 ${CURVE_SVG_W} ${CURVE_SVG_H}" preserveAspectRatio="xMidYMid meet" font-family='${EXPORT_FONT_SANS}'>`);
+    body += `<rect x="${px}" y="${py}" width="${g.PANEL_W}" height="${g.PANEL_H}" rx="3" fill="${cssVar('--panel-bg', 'rgba(14,14,15,.9)')}" stroke="${cssVar('--rule', 'rgba(236,230,216,.16)')}" stroke-width="1"/>`;
+    body += `<text x="${px + g.PAD}" y="${py + 22}" font-family='${EXPORT_FONT_SERIF}' font-weight="800" font-size="19" fill="${cssVar('--ink', '#ece6d8')}">${escapeHtml(title)}</text>`;
+    body += `<text x="${px + g.PAD}" y="${py + 38}" font-weight="500" font-size="10.5" fill="${cssVar('--text-dim', 'rgba(236,230,216,.6)')}">${escapeHtml(subtitle)}</text>`;
+    body += inner;
+  });
+  body += presentTitleSVG(g.exportW, g.exportH, list[0]?.city?.name || S.cities[0]?.name || '');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${g.exportW}" height="${g.exportH}" viewBox="0 0 ${g.exportW} ${g.exportH}" font-family='${EXPORT_FONT_SANS}'>${body}</svg>`;
+  triggerDownloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${exportBaseName()}.svg`);
+}
+
+async function exportCurvesPNG() {
+  const sel = curvesCitiesToExport();
+  if (!sel) return;
+  const { list, shared } = sel;
+  const g = curvesExportGeometry(list.length);
+  const dpr = 2;
+  const c = document.createElement('canvas');
+  c.width = g.exportW * dpr;
+  c.height = g.exportH * dpr;
+  const x = c.getContext('2d');
+  x.scale(dpr, dpr);
+  x.fillStyle = cssVar('--bg', '#0b0b0c');
+  x.fillRect(0, 0, g.exportW, g.exportH);
+  for (let i = 0; i < list.length; i++) {
+    const { city, ribbon } = list[i];
+    const scales = shared || { yMin: ribbon.yMin, yMax: ribbon.yMax, colorDomain: ribbon.colorDomain };
+    const { html } = buildCurvesSVG(city, ribbon, scales, i);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const panel = tmp.firstElementChild;
+    const title = panel.querySelector('.curves-panel__title').textContent;
+    const subtitle = panel.querySelector('.curves-panel__subtitle').textContent;
+    const svgMarkup = inlineSvgVars(new XMLSerializer().serializeToString(panel.querySelector('svg')));
+    const px = g.MARGIN + i * (g.PANEL_W + g.GAP);
+    const py = g.MARGIN;
+    x.fillStyle = cssVar('--panel-bg', 'rgba(14,14,15,.9)');
+    x.strokeStyle = cssVar('--rule', 'rgba(236,230,216,.16)');
+    x.lineWidth = 1;
+    roundRectFillStroke(x, px, py, g.PANEL_W, g.PANEL_H, 3);
+    x.fillStyle = cssVar('--ink', '#ece6d8');
+    x.font = '800 19px "Playfair Display", Georgia, serif';
+    x.fillText(title, px + g.PAD, py + 22);
+    x.fillStyle = cssVar('--text-dim', 'rgba(236,230,216,.6)');
+    x.font = '500 10.5px Inter, sans-serif';
+    x.fillText(subtitle, px + g.PAD, py + 38);
+    try {
+      const chartImg = await loadSvgToCanvas(svgMarkup, g.CHART_W, g.CHART_H);
+      x.drawImage(chartImg, px + g.PAD, py + g.HEADER, g.CHART_W, g.CHART_H);
+    } catch (err) {
+      console.error('Curves export failed', err);
+    }
+  }
+  drawPresentTitleOnCanvas(x, g.exportW, g.exportH, list[0]?.city?.name || S.cities[0]?.name || '');
+  triggerDownload(c.toDataURL('image/png'), `${exportBaseName()}.png`);
+}
+
 async function exportBarChartsGIF() {
   const perCity = getBarChartCities();
   if (!perCity.length) return;
@@ -3733,6 +4968,8 @@ document.getElementById('export-png-btn').addEventListener('click', async () => 
   await ensureExportFonts();
   if (S.chartView === 'bar') exportBarChartsPNG();
   else if (S.chartView === 'ridge') exportRidgelinePNG();
+  else if (S.chartView === 'radial') exportRadialPNG();
+  else if (S.chartView === 'curves') exportCurvesPNG();
   else exportStripesPNG();
 });
 
@@ -3746,6 +4983,8 @@ document.getElementById('export-svg-btn').addEventListener('click', async () => 
   await ensureExportFonts();
   if (S.chartView === 'bar') exportBarChartsSVG();
   else if (S.chartView === 'ridge') exportRidgelineSVG();
+  else if (S.chartView === 'radial') exportRadialSVG();
+  else if (S.chartView === 'curves') exportCurvesSVG();
   else exportStripesSVG();
 });
 
@@ -3758,6 +4997,7 @@ window.addEventListener('keydown', e => {
   }
   if (e.key === 'h' || e.key === 'H') togglePanel();
   if (e.key === 'c' || e.key === 'C') {
+    if (S.chartView === 'curves' && S.coloring === 'anomaly') return;
     const next = S.coloring === 'anomaly' ? 'absolute' : 'anomaly';
     document.querySelector(`#color-seg [data-val="${next}"]`)?.click();
   }
